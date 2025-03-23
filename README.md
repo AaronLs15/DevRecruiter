@@ -1,4 +1,4 @@
-# Proyecto Chat IA
+# Proyecto Dev Recruiter
 
 Este proyecto integra un frontend en React (creado con Vite y TailwindCSS) y un backend basado en Node.js con Express y SQLite. La aplicación simula una interfaz de chat (similar a ChatGPT) y cuenta con una API para almacenar preguntas preestablecidas y respuestas generadas por una IA, la cual se ejecutará localmente usando Ollama.
 
@@ -16,13 +16,6 @@ Este proyecto integra un frontend en React (creado con Vite y TailwindCSS) y un 
 ## Instalación
 
 ### 1. Clonar el Repositorio
-
-Si aún no lo has clonado, ejecuta en tu terminal:
-
-```bash
-git clone https://github.com/tu-usuario/tu-repo.git
-cd tu-repo
-```
 
 ### 2. Instalación de Dependencias del Frontend
 Desde la raíz del proyecto, instala las dependencias del frontend:
@@ -89,11 +82,11 @@ npm run dev
 ```
 
 # Uso
-## Interfaz de Chat: La aplicación React simula un chat con un input de texto y muestra el historial de mensajes.
+Interfaz de Chat: La aplicación React simula un chat con un input de texto y muestra el historial de mensajes.
 
-## API: El backend permite almacenar y recuperar preguntas y respuestas mediante peticiones HTTP.
+API: El backend permite almacenar y recuperar preguntas y respuestas mediante peticiones HTTP.
 
-## IA con Ollama: Con Ollama instalado y corriendo, la aplicación puede realizar peticiones a la API de Ollama para obtener respuestas generadas por la IA local.
+IA con Ollama: Con Ollama instalado y corriendo, la aplicación puede realizar peticiones a la API de Ollama para obtener respuestas generadas por la IA local.
 
 # Tecnologías Utilizadas
 ## Frontend:
