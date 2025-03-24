@@ -110,3 +110,5 @@ Asegúrate de tener corriendo tanto el backend como el frontend para que la apli
 Verifica que Ollama esté activo en tu máquina antes de enviar peticiones que involucren la generación de respuestas de la IA.
 
 Puedes personalizar la API, la interfaz del chat o la integración con Ollama según tus necesidades.
+
+tet
