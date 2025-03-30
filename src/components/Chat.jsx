@@ -1,20 +1,35 @@
 import React, { useState } from 'react';
 import { FaArrowAltCircleUp } from 'react-icons/fa';
+import useUserData from '../Hooks/chat/useUserData';
 
 const ChatInterface = () => {
   const [input, setInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
+  const { userData, loading, error } = useUserData(); // Usar el hook personalizado
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
-    // Agrega el mensaje del usuario al historial
     setChatHistory([...chatHistory, { text: input, sender: 'user' }]);
     setInput('');
   };
 
+  console.log("chat",chatHistory)
+
   return (
     <div className="flex flex-col h-full bg-[#222649] p-4 rounded-lg border border-gray-300">
+      {/* Mostrar la imagen del usuario */}
+      {loading && <p className="text-white">Cargando...</p>}
+      {error && <p className="text-red-500">Error: {error}</p>}
+      {userData && userData.length > 0 && (
+        <div className="flex justify-center mb-4">
+          <img
+            src="../../src/assets/logo.jpg" // Accede directamente a userData[0].Image
+            alt="Usuario"
+            className="w-16 h-16 rounded-full border-2 border-white"
+          />
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto mb-4 space-y-2">
         {chatHistory.length === 0 && (
           <p className="text-4xl text-center text-white font-bold ">Comienza la conversación...</p>
