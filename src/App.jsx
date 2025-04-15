@@ -3,6 +3,7 @@ import './App.css'
 import Header from './components/Header'
 import SideBar from './components/SideBar'
 import ChatInterface from './components/Chat'
+import ChatInterface2 from './components/chat2'
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +15,7 @@ function App() {
       <div className="flex flex-1">
         <SideBar isOpen={isOpen} toggleSidebar={toggleSidebar} />
         <main className={`flex-1 transition-all duration-300 p-4 border-l border-gray-300 rounded-lg ${isOpen ? 'ml-64' : 'ml-20'}`}>
-          <ChatInterface />
+          <ChatInterface2 />
         </main>
       </div>
     </div>
