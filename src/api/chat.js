@@ -9,3 +9,13 @@ export const getUsersData = async () => {
     throw error; // Lanza el error para manejarlo en el hook
   }
 };
+
+export const getPrimeraFasePreguntas= async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/api/PrimeraFasePreguntas'); // Cambia la URL si es necesario
+    return response.data; // Devuelve los datos de las preguntas
+  } catch (error) {
+    console.error('Error al obtener las preguntas:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}

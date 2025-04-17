@@ -16,23 +16,30 @@ function classNames(...classes) {
 }
 
 export default function Header({ isOpen }) {
-  const { userData, loading, error } = useUserData(); // Usar el hook personalizado
+  const { userData } = useUserData();
 
-  // Asignar los datos del usuario si están disponibles
-  const user = userData && userData.length > 0
+  const user = userData && Array.isArray(userData) && userData.length > 0
     ? {
-        name: userData[0].Name,
-        email: userData[0].Email,
-        imageUrl: userData[0].Image,
+        name: userData[0].Nombre_usuario || '',
+        email: userData[0].Email || '',
       }
     : {
         name: 'Cargando...',
         email: 'Cargando...',
-        imageUrl: '../assets/logo.jpg', // Imagen por defecto o vacía mientras se cargan los datos
       };
 
+  // Obtener iniciales del usuario, con fallback a vacío si no hay nombre
+  const nameForInitials = user.name || '';
+  const initials = nameForInitials
+    .split(' ')
+    .map(n => n.charAt(0))
+    .filter(Boolean)
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+
   return (
-    <div className={`transition-all duration-300 ${isOpen ? "ml-64" : "ml-20"} border-b border-black rounded-r-lg`}>
+    <div className={`transition-all duration-300 ${isOpen ? 'ml-64' : 'ml-20'} border-b border-black rounded-r-lg`}>
       <div className="min-h-full">
         <Disclosure as="nav" className="bg-gray-800 rounded-lg">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -68,10 +75,12 @@ export default function Header({ isOpen }) {
                     <div>
                       <MenuButton className="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden">
                         <span className="absolute -inset-1.5" />
-                        <span className="sr-only">Abrir menu del perfil</span>
-                        <img alt="" src={user.imageUrl} className="size-8 rounded-full" />
+                        <span className="sr-only">Abrir menú del perfil</span>
+                        <div className="h-8 w-8 flex items-center justify-center rounded-full bg-indigo-500 text-white font-medium">
+                          {initials}
+                        </div>
                         <div className="ml-3">
-                          <div className="text-base/5 font-medium text-white">{user.name}</div>
+                          <div className="text-base font-medium text-white">{user.name}</div>
                           <div className="text-sm font-medium text-gray-400">{user.email}</div>
                         </div>
                       </MenuButton>
@@ -97,7 +106,7 @@ export default function Header({ isOpen }) {
               <div className="-mr-2 flex md:hidden">
                 <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden">
                   <span className="absolute -inset-0.5" />
-                  <span className="sr-only">Open main menu</span>
+                  <span className="sr-only">Abrir menú principal</span>
                   <Bars3Icon aria-hidden="true" className="block size-6 group-data-open:hidden" />
                   <XMarkIcon aria-hidden="true" className="hidden size-6 group-data-open:block" />
                 </DisclosureButton>
@@ -125,18 +134,19 @@ export default function Header({ isOpen }) {
             <div className="border-t border-gray-700 pt-4 pb-3">
               <div className="flex items-center px-5">
                 <div className="shrink-0">
-                  <img alt="" src={user.imageUrl} className="size-10 rounded-full" />
+                  <div className="h-10 w-10 flex items-center justify-center rounded-full bg-indigo-500 text-white font-medium">
+                    {initials}
+                  </div>
                 </div>
                 <div className="ml-3">
-                  <div className="text-base/5 font-medium text-white">{user.name}</div>
-                  <div className="text-sm font-medium text-gray-400">{user.email}</div>
+                  <div className="text-base font-medium text-white">{user.name}</div>
                 </div>
                 <button
                   type="button"
                   className="relative ml-auto shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
                 >
                   <span className="absolute -inset-1.5" />
-                  <span className="sr-only">View notifications</span>
+                  <span className="sr-only">Ver notificaciones</span>
                   <BellIcon aria-hidden="true" className="size-6" />
                 </button>
               </div>
