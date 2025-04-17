@@ -23,6 +23,15 @@ const userController = {
       res.json({ id: lastID });
     });
   },
+
+  getPrimeraFase: (req, res) => {
+    UserModel.getPrimeraFase((err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ data: rows });
+    });
+  }
 };
 
 module.exports = userController;
