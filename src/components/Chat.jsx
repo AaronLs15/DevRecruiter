@@ -1,79 +1,52 @@
-import React, { useState } from 'react';
-import { FaArrowAltCircleUp } from 'react-icons/fa';
-import useUserData from '../Hooks/chat/useUserData';
-import { sendMessageToOllama } from '../api/ia/ollama'; // Importa la función
+// src/components/ChatInterface2.jsx
+import React from 'react';
+import { FaArrowAltCircleUp, FaSpinner } from 'react-icons/fa';
+import useInterviewChat from '../Hooks/chat/useChat';
 
-const ChatInterface = () => {
-  const [input, setInput] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);
-  const { userData, loading, error } = useUserData(); // Usar el hook personalizado
+export default function ChatInterface() {
+  const { input, setInput, chatHistory, loading, sendUserMessage } = useInterviewChat();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
-    if (!input.trim()) return;
-
-    // Agrega el mensaje del usuario al historial
-    setChatHistory([...chatHistory, { text: input, sender: 'user' }]);
-
-    // Envía el mensaje a Ollama y obtiene la respuesta
-    const response = await sendMessageToOllama(input);
-
-    // Agrega la respuesta de Ollama al historial
-    setChatHistory((prev) => [...prev, { text: response, sender: 'bot' }]);
-
-    setInput('');
+    sendUserMessage();
   };
-
-  console.log("chat",chatHistory)
 
   return (
     <div className="flex flex-col h-full bg-[#222649] p-4 rounded-lg border border-gray-300">
-      {/* Mostrar la imagen del usuario */}
-      {loading && <p className="text-white">Cargando...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
-      {userData && userData.length > 0 && (
-        <div className="flex justify-center mb-4">
-          <img
-            src="../../src/assets/logo.jpg" // Accede directamente a userData[0].Image
-            alt="Usuario"
-            className="w-16 h-16 rounded-full border-2 border-white"
-          />
-        </div>
-      )}
       <div className="flex-1 overflow-y-auto mb-4 space-y-2">
-        {chatHistory.length === 0 && (
-          <p className="text-4xl text-center text-white font-bold ">Comienza la conversación...</p>
-        )}
-        {chatHistory.map((msg, index) => (
+        {chatHistory.map((msg, idx) => (
           <div
-            key={index}
-            className={`max-w-[70%] p-3 rounded-lg ${
+            key={idx}
+            className={`max-w-[70%] p-3 rounded-lg flex ${
               msg.sender === 'user'
                 ? 'bg-blue-500 self-end'
+                : msg.sender === 'system'
+                ? 'bg-gray-600 self-start italic text-sm text-gray-200'
                 : 'bg-gray-700 self-start'
             }`}
           >
-            <p className="text-white">{msg.text}</p>
+            <p className="text-white whitespace-pre-wrap">{msg.text}</p>
           </div>
         ))}
       </div>
+
       <form onSubmit={handleSubmit} className="flex">
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={e => setInput(e.target.value)}
           placeholder="Escribe tu mensaje..."
-          className="flex-1 p-2 border border-white text-white font-bold rounded-l-lg focus:outline-none"
+          disabled={loading}
+          className="flex-1 p-2 border border-white text-white font-bold rounded-l-lg focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
-          className="p-2 bg-blue-800 text-white border rounded-r-lg hover:bg-green-600"
+          disabled={loading}
+          className="p-2 bg-blue-800 text-white border rounded-r-lg flex items-center justify-center disabled:opacity-50"
         >
-          <FaArrowAltCircleUp size={24} />
+          {loading ? <FaSpinner className="animate-spin" size={24} /> : <FaArrowAltCircleUp size={24} />}
         </button>
       </form>
     </div>
   );
-};
-
-export default ChatInterface;
+}

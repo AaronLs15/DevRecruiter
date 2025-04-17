@@ -12,7 +12,6 @@ const useUserData = () => {
         const response = await getUsersData();
         if (response.data && response.data.length > 0) {
           setUserData(response.data);
-          console.log(response.data) // Accede al primer usuario
         } else {
           throw new Error('No se encontraron datos de usuario');
         }

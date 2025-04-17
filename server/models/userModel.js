@@ -1,9 +1,9 @@
-// server/models/userModel.js
+
 const db = require('../config/db');
 
 const UserModel = {
   getAllUsers: (callback) => {
-    const sql = "SELECT * FROM Users";
+    const sql = "SELECT * FROM usuarios";
     db.all(sql, [], callback);
   },
 
@@ -13,6 +13,11 @@ const UserModel = {
       callback(err, this ? this.lastID : null);
     });
   },
+
+  getPrimeraFase: (callback) => {
+    const sql = "Select pregunta from Preguntas WHERE ID BETWEEN 1 AND 10";
+    db.all(sql, [], callback);
+  }
 };
 
 module.exports = UserModel;

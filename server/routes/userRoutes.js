@@ -7,6 +7,9 @@ const userController = require('../controllers/userController');
 router.get('/Users', userController.getAllUsers);
 
 // Ruta para agregar un nuevo usuario
-router.post('/Users', userController.createUser);
+router.post('/actUser', userController.createUser);
+
+// Ruta para obtener las preguntas de la primera fase
+router.get('/PrimeraFasePreguntas', userController.getPrimeraFase);
 
 module.exports = router;
