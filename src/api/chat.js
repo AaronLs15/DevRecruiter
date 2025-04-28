@@ -19,3 +19,45 @@ export const getPrimeraFasePreguntas= async () => {
     throw error; // Lanza el error para manejarlo en el hook
   }
 }
+
+export const getSegundaFasePreguntas = async (role) => {
+  try {
+    const response = await axios.get(
+      `http://localhost:5000/api/SegundaFasePreguntas?role=${encodeURIComponent(role)}`
+    );
+    return response.data; // Devuelve los datos de las preguntas
+  } catch (error) {
+    console.error('Error al obtener las preguntas:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const actPrimeraFase = async () => {
+  try {
+    const response = await axios.post('http://localhost:5000/api/actPrimeraFase');
+    return response;
+  } catch (error) {
+    console.error('Error al obtener las preguntas de la primera fase:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const createEntrevista = async ({ ID_Aspirante, ID_Sector, Tipo_Entrevista }) => {
+  try {
+    const payload = {
+      ID_Aspirante,
+      ID_Sector,
+      Tipo_Entrevista,
+      Fecha_Entrevista: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+      Estado: 'En Desarrollo'
+    };
+    const response = await axios.post('http://localhost:5000/api/Entrevista', payload);
+    const { ID_Entrevista } = response.data;
+    // Guardar en localStorage para uso posterior
+    localStorage.setItem('ID_Entrevista', ID_Entrevista);
+    return ID_Entrevista;
+  } catch (error) {
+    console.error('Error al crear la entrevista:', error);
+    throw error;
+  }
+}
