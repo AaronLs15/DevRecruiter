@@ -84,7 +84,7 @@ export default function useInterviewChat() {
       const fetchSegundaFase = async () => {
         setLoading(true);
         try {
-          const prompt = `Dame 5 preguntas técnicas para simular una entrevista a un desarrollador ${role}. solo dame las preguntas enumeradas y no me des una introduccion a tu respuesta`;
+          const prompt = `Dame 1 pregunta técnicas para simular una entrevista a un desarrollador ${role} con una dificultad de 30 sobre 100 donde 100 es lo mas dificil. solo dame la pregunta enumerada y no me des una introduccion a tu respuesta`;
           const raw = await sendMessageToOllama(prompt);
           const lines = raw.split(/\r?\n/).filter(line => line.trim());
           const preguntas = lines.map(line => line.replace(/^\d+\.?\s*/, '').trim());
@@ -143,7 +143,7 @@ export default function useInterviewChat() {
     }
 
     // Después de primera fase, pasar a segunda fase
-    if (roleSelected && !showPrimeraFase && !showSegundaFase && !loadingPrimeraF && respuestasPrimeraF.length >= primeraFasePreguntas.length) {
+    if (respuestasPrimeraF.length === 4) {
       setChatHistory(prev => [...prev, { text: 'Gracias por tus respuestas. Ahora pasemos a la segunda fase de preguntas técnicas.', sender: 'bot' }]);
       setShowSegundaFase(true);
       setInput('');
