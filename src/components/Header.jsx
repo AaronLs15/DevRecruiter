@@ -70,14 +70,14 @@ export default function Header({ isOpen }) {
             {/* Icono de notificaciones + menú de usuario (desktop) */}
             <div className="hidden md:block">
               <div className="ml-4 flex items-center md:ml-6">
-                <button
+                {/*<button
                   type="button"
                   className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-none"
                 >
                   <span className="sr-only">Ver notificaciones</span>
                   <BellIcon aria-hidden="true" className="h-6 w-6" />
                 </button>
-
+                */}
                 <Menu as="div" className="relative ml-3">
                   <MenuButton className="flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                     <span className="sr-only">Abrir menú del perfil</span>
