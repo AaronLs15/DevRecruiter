@@ -54,8 +54,46 @@ const userController = {
         res.json({ ID_Entrevista });
       }
     );
-  }
-  
+  },
+
+  actCalificacionPrimeraFase: (req, res) => {
+    const { Preguntas, Respuestas, ID_Entrevista, Fase, Calificacion } = req.body;
+
+    // Validaciones básicas
+    if (!Preguntas || !Respuestas || !ID_Entrevista || !Fase || !Calificacion) {
+      return res.status(400).json({ error: 'Faltan campos requeridos en el payload' });
+    }
+
+    UserModel.actCalificacionPrimeraFase(
+      { Preguntas, Respuestas, ID_Entrevista, Fase, Calificacion },
+      (err) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: 'Calificación actualizada correctamente' });
+      }
+    );
+  },
+
+  actCalificacionSegundaFase: (req, res) => {
+    const { Preguntas, Respuestas, ID_Entrevista, Fase, Calificacion } = req.body;
+
+    // Validaciones básicas
+    if (!Preguntas || !Respuestas || !ID_Entrevista || !Fase || !Calificacion) {
+      return res.status(400).json({ error: 'Faltan campos requeridos en el payload' });
+    }
+
+    UserModel.actCalificacionSegundaFase(
+      { Preguntas, Respuestas, ID_Entrevista, Fase, Calificacion },
+      (err) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: 'Calificación actualizada correctamente' });
+      }
+    );
+  },
+
 };
 
 module.exports = userController;

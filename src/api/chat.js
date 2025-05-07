@@ -61,3 +61,23 @@ export const createEntrevista = async ({ ID_Aspirante, ID_Sector, Tipo_Entrevist
     throw error;
   }
 }
+
+export const actCalificacionPrimeraFase = async ({data}) => {
+  try {
+    const response = await axios.post('http://localhost:5000/api/actCalificacionPrimeraFase', data);
+    return response.data; 
+  } catch (error) {
+    console.error('Error al actualizar la calificación de la primera fase:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const actCalificacionSegundaFase = async ({data}) => {
+  try {
+    const response = await axios.post('http://localhost:5000/api/actCalificacionSegundaFase', data);
+    return response.data; 
+  } catch (error) {
+    console.error('Error al actualizar la calificación de la segunda fase:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}

@@ -12,6 +12,13 @@ router.post('/actUser', userController.createUser);
 // Ruta para obtener las preguntas de la primera fase
 router.get('/PrimeraFasePreguntas', userController.getPrimeraFase);
 
+//Ruta para crear la entrevista
 router.post('/Entrevista', userController.createEntrevista);
+
+// Ruta para insertar la calificación de la primera fase
+router.post('/actCalificacionPrimeraFase', userController.actCalificacionPrimeraFase);
+
+// Ruta para insertar la calificacion de la segunda fase
+router.post('/actCalificacionSegundaFase', userController.actCalificacionSegundaFase);
 
 module.exports = router;

@@ -1,171 +1,234 @@
 import { useState, useEffect } from 'react';
 import { sendMessageToOllama } from '../../api/ia/ollama';
-import usePrimeraFasePreguntas from './useChatData';
-import { createEntrevista } from '../../api/chat';
+import { usePrimeraFasePreguntas } from './useChatData';
+import { createEntrevista, actCalificacionPrimeraFase, actCalificacionSegundaFase } from '../../api/chat';
 import useUserData from './useUserData';
 
-
 const VALID_ROLES = ['fullstack', 'backend', 'frontend'];
+const PRIMERA_LIMIT = 1;
+const SEGUNDA_LIMIT = 1;
 
 export default function useInterviewChat() {
   const [input, setInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [role, setRole] = useState('');
   const [roleSelected, setRoleSelected] = useState(false);
-  const [showPrimeraFase, setShowPrimeraFase] = useState(false);
-  const [showSegundaFase, setShowSegundaFase] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [segundaFasePreguntas, setSegundaFasePreguntas] = useState([]);
-  const [entrevistaId, setEntrevistaId] = useState(null);       // NUEVO
 
-  const { userData } = useUserData();
-  
-  const [respuestasPrimeraF, setRespuestasPrimeraF] = useState([]);
-  const [respuestasSegundaF, setRespuestasSegundaF] = useState([]);
-
+  // Primera fase
   const { primeraFasePreguntas, loading: loadingPrimeraF, error: errorPrimeraF } = usePrimeraFasePreguntas();
+  const [respuestasPrimeraF, setRespuestasPrimeraF] = useState([]);
+  const [primeraIndex, setPrimeraIndex] = useState(-1);
+
+  // Resultado IA primera fase
+  const [calificacionPF, setCalificacionPF] = useState(null);
+
+  // Calificación de experiencia antes de segunda fase
+  const [expectRating, setExpectRating] = useState(false);
+  const [experienciaRating, setExperienciaRating] = useState(null);
+
+  // Segunda fase
+  const [currentSegundaPregunta, setCurrentSegundaPregunta] = useState(null);
+  const [respuestasSegundaF, setRespuestasSegundaF] = useState([]);
+  const [scoresSegundaF, setScoresSegundaF] = useState([]);
+  const [previousScore, setPreviousScore] = useState(30);
+
+  const [entrevistaId, setEntrevistaId] = useState(null);
+  const { userData } = useUserData();
 
   // Mensaje inicial
   useEffect(() => {
-    setChatHistory([
-      { text: '¿A qué tipo de puesto como desarrollador aspiras? Desarrollador FullStack, Backend o Frontend?', sender: 'system' }
-    ]);
+    setChatHistory([{ text: '¿A qué tipo de puesto como desarrollador aspiras? Desarrollador FullStack, Backend o Frontend?', sender: 'bot' }]);
   }, []);
 
-  // Mostrar preguntas de primera fase
+  // Iniciar primera pregunta tras elegir rol
   useEffect(() => {
-    if (showPrimeraFase && !loadingPrimeraF) {
-      if (errorPrimeraF) {
-        setChatHistory(prev => [
-          ...prev,
-          { text: 'Error al cargar las preguntas de la primera fase. Intenta más tarde.', sender: 'bot' }
-        ]);
-      } else {
-        primeraFasePreguntas.forEach(({ pregunta }) => {
-          setChatHistory(prev => [...prev, { text: pregunta, sender: 'bot' }]);
-        });
-        setChatHistory(prev => [
-          ...prev,
-          { text: 'Por favor responde a cada pregunta enumerando tu respuesta con el número de la pregunta correspondiente. Si no sabes la respuesta, escribe "Número de pregunta. No tengo una respuesta en mente para esta pregunta".', sender: 'bot' }
-        ]);
-      }
-      setShowPrimeraFase(false);
+    if (roleSelected && !loadingPrimeraF && primeraFasePreguntas.length) {
+      if (primeraIndex === -1) setPrimeraIndex(0);
     }
-  }, [showPrimeraFase, loadingPrimeraF, primeraFasePreguntas, errorPrimeraF]);
+  }, [roleSelected, loadingPrimeraF, primeraFasePreguntas]);
 
-   // Este efecto se dispara cuando cambian las respuestas de primera fase
-   useEffect(() => {
-    // Si justo acaban de responder la primera pregunta (length pasa a 1)
-    // y aún no hemos creado la entrevista (entrevistaId === null)
-    if (respuestasPrimeraF.length === 1 && entrevistaId === null) {
-      const crear = async () => {
+  // Mostrar cada pregunta de la primera fase dinámicamente
+  useEffect(() => {
+    if (primeraIndex >= 0 && primeraIndex < PRIMERA_LIMIT) {
+      const pregunta = primeraFasePreguntas[primeraIndex]?.pregunta;
+      if (pregunta) setChatHistory(prev => [...prev, { text: `${primeraIndex + 1}. ${pregunta}`, sender: 'bot' }]);
+    }
+  }, [primeraIndex, primeraFasePreguntas]);
+
+  // Crear entrevista tras la primera respuesta y almacenar ID
+  useEffect(() => {
+    if (respuestasPrimeraF.length === PRIMERA_LIMIT && entrevistaId === null) {
+      (async () => {
         try {
           const idUser = userData[0].id;
-          const sectorId = 1; // mapea según tu lógica real
+          const sectorId = 1;
           const tipo = role.toLowerCase();
-          const idEnt = await createEntrevista({
-            ID_Aspirante: idUser,
-            ID_Sector: sectorId,
-            Tipo_Entrevista: tipo
-          });
-          //console.log('Entrevista creada con ID:', idEnt);
+          const idEnt = await createEntrevista({ ID_Aspirante: idUser, ID_Sector: sectorId, Tipo_Entrevista: tipo });
           setEntrevistaId(idEnt);
+          localStorage.setItem('ID_Entrevista', idEnt);
         } catch (err) {
           console.error('Error creando entrevista:', err);
         }
-      };
-      crear();
+      })();
     }
   }, [respuestasPrimeraF, entrevistaId, userData, role]);
 
-  // Mostrar y almacenar preguntas de segunda fase obtenidas desde Ollama
+  // Al terminar primera fase: calcular IA y guardar en base de datos
   useEffect(() => {
-    if (showSegundaFase) {
-      const fetchSegundaFase = async () => {
+    if (respuestasPrimeraF.length === PRIMERA_LIMIT && entrevistaId) {
+      (async () => {
         setLoading(true);
+        const preguntasArr = primeraFasePreguntas.slice(0, PRIMERA_LIMIT).map(p => p.pregunta);
+        const respuestasArr = respuestasPrimeraF;
+        const prompt = `a partir de las siguientes preguntas ${preguntasArr.join(', ')} y sus respuestas ${respuestasArr.join(', ')} calificalas de 0 a 100 simulando una entrevista para un desarrollador ${role} solo retorname la calificacion que le das`;
         try {
-          const prompt = `Dame 1 pregunta técnicas para simular una entrevista a un desarrollador ${role} con una dificultad de 30 sobre 100 donde 100 es lo mas dificil. solo dame la pregunta enumerada y no me des una introduccion a tu respuesta`;
           const raw = await sendMessageToOllama(prompt);
-          const lines = raw.split(/\r?\n/).filter(line => line.trim());
-          const preguntas = lines.map(line => line.replace(/^\d+\.?\s*/, '').trim());
-
-          setSegundaFasePreguntas(preguntas);
-          preguntas.forEach(q => setChatHistory(prev => [...prev, { text: q, sender: 'bot' }]));
+          const match = raw.match(/\d+/);
+          const calif = match ? parseInt(match[0], 10) : 0;
+          setCalificacionPF(calif);
+          await actCalificacionPrimeraFase({ data: { Preguntas: preguntasArr.join(','), Respuestas: respuestasArr.join(','), ID_Entrevista: entrevistaId, Fase: 1, Calificacion: calif } });
         } catch (err) {
-          console.error('Error en segunda fase IA:', err);
-          setChatHistory(prev => [...prev, { text: 'Error obteniendo preguntas técnicas. Intenta más tarde.', sender: 'bot' }]);
+          console.error('Error en calificación primera fase:', err);
+          setChatHistory(prev => [...prev, { text: 'Error al procesar la calificación de la primera fase. Intenta más tarde.', sender: 'bot' }]);
         } finally {
-          setChatHistory(prev => [...prev, { text: 'Por favor responde las preguntas anteriores cuando estés listo.', sender: 'bot' }]);
           setLoading(false);
-          setShowSegundaFase(false);
         }
-      };
-      fetchSegundaFase();
+      })();
     }
-  }, [showSegundaFase, role]);
+  }, [respuestasPrimeraF, entrevistaId]);
 
-  // Envía el mensaje del usuario y controla el flujo
+  // Cuando calificacionPF esté lista, mostrar resultado y pedir rating de experiencia
+  useEffect(() => {
+    if (calificacionPF !== null) {
+      setChatHistory(prev => [
+        ...prev,
+        { text: `Calificación de la primera fase: ${calificacionPF}/100`, sender: 'bot' },
+        { text: 'Para poder seguir con la etapa de las preguntas técnicas necesito saber lo siguiente para agregarlo a mi sistema.', sender: 'bot' },
+        { text: 'En una escala del 1 al 5, ¿qué tan experimentado o con conocimiento te sientes en el área que elegiste para hacer la entrevista? (Responde únicamente con un número del 1 al 5)', sender: 'bot' }
+      ]);
+      setExpectRating(true);
+      setLoading(false);
+    }
+  }, [calificacionPF]);
+
+  // Finalizar segunda fase cuando los estados estén actualizados
+  useEffect(() => {
+    if (respuestasSegundaF.length === SEGUNDA_LIMIT && scoresSegundaF.length === SEGUNDA_LIMIT) {
+      finalizarSegundaFase();
+    }
+  }, [respuestasSegundaF, scoresSegundaF]);
+
+  // Manejar envío del usuario
   const sendUserMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
 
-    // Agregar mensaje del usuario al historial
     setChatHistory(prev => [...prev, { text: trimmed, sender: 'user' }]);
-
-    // Guardar respuestas de primera fase
-    if (roleSelected && !showSegundaFase && primeraFasePreguntas.length > 0 && respuestasPrimeraF.length < primeraFasePreguntas.length) {
-      setRespuestasPrimeraF(prev => [...prev, trimmed]);
-    }
-
-    // Guardar respuestas de segunda fase
-    if (showSegundaFase === false && roleSelected && segundaFasePreguntas.length > 0 && respuestasSegundaF.length < segundaFasePreguntas.length) {
-      // Antes de terminar carga de segunda fase, las respuestas del usuario corresponden a segunda fase
-      setRespuestasSegundaF(prev => [...prev, trimmed]);
-    }
-
-    setLoading(true);
+    setInput('');
 
     // Selección de rol
     if (!roleSelected) {
-      const roleKey = trimmed.toLowerCase();
-      if (!VALID_ROLES.includes(roleKey)) {
-        setChatHistory(prev => [...prev, { text: 'Por favor vuelve a intentarlo :)', sender: 'bot' }]);
-        setLoading(false);
+      const key = trimmed.toLowerCase();
+      if (!VALID_ROLES.includes(key)) {
+        setChatHistory(prev => [...prev, { text: 'Rol no válido. Intenta FullStack, Backend o Frontend.', sender: 'bot' }]);
       } else {
         setRole(trimmed);
         setRoleSelected(true);
-        setChatHistory(prev => [...prev, { text: 'Perfecto! Primero empecemos con las preguntas que tengo guardadas para trabajar cómo responderás preguntas para darte a conocer.', sender: 'bot' }]);
-        setShowPrimeraFase(true);
+        setChatHistory(prev => [...prev, { text: '¡Genial! Empecemos con la primera fase de preguntas.', sender: 'bot' }]);
+      }
+      return;
+    }
+
+    // Guardar respuestas de primera fase
+    if (respuestasPrimeraF.length < PRIMERA_LIMIT) {
+      setRespuestasPrimeraF(prev => [...prev, trimmed]);
+      setPrimeraIndex(prev => prev + 1);
+      return;
+    }
+
+    // Validar y guardar calificación de experiencia
+    if (expectRating) {
+      const rating = parseInt(trimmed, 10);
+      if (isNaN(rating) || rating < 1 || rating > 5) {
+        setChatHistory(prev => [...prev, { text: 'Por favor responde únicamente con un número del 1 al 5.', sender: 'bot' }]);
+        return;
+      }
+      setExperienciaRating(rating);
+      const score = Math.round((rating / 5) * 100);
+      setPreviousScore(score);
+      setChatHistory(prev => [...prev, { text: `Entendido, nivel ${rating} de experiencia (${score}/100). Comenzamos la fase técnica.`, sender: 'bot' }]);
+      setExpectRating(false);
+      fetchNextSegundaPregunta();
+      return;
+    }
+
+    // Respuestas segunda fase
+    if (currentSegundaPregunta && respuestasSegundaF.length < SEGUNDA_LIMIT) {
+      // Guardar respuesta y puntaje
+      const nuevaRespuesta = { pregunta: currentSegundaPregunta, respuesta: trimmed };
+      setRespuestasSegundaF(prev => [...prev, nuevaRespuesta]);
+      setLoading(true);
+      try {
+        const evalPrompt = `A partir de la pregunta: "${currentSegundaPregunta}" y esta respuesta: "${trimmed}", califícala en una escala de 0 a 100.`;
+        const evalRaw = await sendMessageToOllama(evalPrompt);
+        const match = evalRaw.match(/\d+/);
+        const score = match ? parseInt(match[0], 10) : previousScore;
+        setScoresSegundaF(prev => [...prev, score]);
+        setPreviousScore(score);
+        setChatHistory(prev => [...prev, { text: `Calificación de tu respuesta: ${score}/100`, sender: 'bot' }]);
+
+        // Si no es la última, continuar
+        const newCount = respuestasSegundaF.length + 1;
+        if (newCount < SEGUNDA_LIMIT) {
+          setChatHistory(prev => [...prev, { text: 'Aquí va otra pregunta técnica:', sender: 'bot' }]);
+          fetchNextSegundaPregunta();
+        }
+      } catch (err) {
+        console.error('Error evaluando tu respuesta:', err);
+        setChatHistory(prev => [...prev, { text: 'Error evaluando tu respuesta. Continuemos.', sender: 'bot' }]);
+      } finally {
         setLoading(false);
       }
-      setInput('');
-      return;
     }
+  };
 
-    // Después de primera fase, pasar a segunda fase
-    if (respuestasPrimeraF.length === 4) {
-      setChatHistory(prev => [...prev, { text: 'Gracias por tus respuestas. Ahora pasemos a la segunda fase de preguntas técnicas.', sender: 'bot' }]);
-      setShowSegundaFase(true);
-      setInput('');
+  // Función para obtener la siguiente pregunta técnica
+  const fetchNextSegundaPregunta = async () => {
+    setLoading(true);
+    try {
+      const prompt = `Dame 1 pregunta técnica para simular una entrevista a un desarrollador ${role} con una dificultad de ${previousScore} sobre 100. Solo dame la pregunta enumerada.`;
+      const raw = await sendMessageToOllama(prompt);
+      const line = raw.split(/\r?\n/).find(l => l.trim());
+      const pregunta = line.replace(/^\d+\.?\s*/, '').trim();
+      setCurrentSegundaPregunta(pregunta);
+      setChatHistory(prev => [...prev, { text: pregunta, sender: 'bot' }]);
+    } catch (err) {
+      console.error('Error obteniendo pregunta técnica:', err);
+      setChatHistory(prev => [...prev, { text: 'Error obteniendo pregunta técnica. Intenta más tarde.', sender: 'bot' }]);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Flujo normal tras fases completadas
-    setLoading(false);
-    setInput('');
   };
 
-  return {
-    input,
-    setInput,
-    chatHistory,
-    loading,
-    primeraFasePreguntas,
-    respuestasPrimeraF,
-    segundaFasePreguntas,
-    respuestasSegundaF,
-    showSegundaFase,
-    sendUserMessage,
+  // Finalizar segunda fase: mostrar todas preguntas, respuestas y promedio
+  const finalizarSegundaFase = async () => {
+    setChatHistory(prev => [...prev, { text: 'Has completado la fase técnica. ¡Gracias por tu participación! Aquí un resumen:', sender: 'bot' }]);
+
+    const suma = scoresSegundaF.reduce((acc, val) => acc + val, 0);
+    const promedio = scoresSegundaF.length ? Math.round(suma / scoresSegundaF.length) : 0;
+    setChatHistory(prev => [...prev, { text: `Calificación promedio de la segunda fase: ${promedio}/100`, sender: 'bot' }]);
+
+    if (entrevistaId) {
+      try {
+        const preguntas = respuestasSegundaF.map(r => r.pregunta).join(',');
+        const respuestas = respuestasSegundaF.map(r => r.respuesta).join(',');
+        await actCalificacionSegundaFase({ data: { Preguntas: preguntas, Respuestas: respuestas, ID_Entrevista: entrevistaId, Fase: 2, Calificacion: promedio } });
+      } catch (err) {
+        console.error('Error guardando calificación segunda fase:', err);
+      }
+    }
   };
+
+  return { input, setInput, chatHistory, loading, sendUserMessage };
 }

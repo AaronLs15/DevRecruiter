@@ -62,6 +62,40 @@ const UserModel = {
     );
   },
 
+  actCalificacionPrimeraFase: (
+    { Preguntas,Respuestas,ID_Entrevista,Fase,Calificacion}, callback
+  ) => {
+    const sql = `
+      INSERT INTO Evaluacion
+        (Preguntas,Respuestas,ID_Entrevista,FaseNumero,Puntaje)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    db.run(
+      sql,
+      [Preguntas, Respuestas,ID_Entrevista,Fase, Calificacion],
+      function (err) {
+        callback(err, this ? this.lastID : null);
+      }
+    );
+  },
+
+  actCalificacionSegundaFase: (
+    { Preguntas,Respuestas,ID_Entrevista,Fase,Calificacion}, callback
+  ) => {
+    const sql = `
+      INSERT INTO Evaluacion
+        (Preguntas,Respuestas,ID_Entrevista,FaseNumero,Puntaje)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    db.run(
+      sql,
+      [Preguntas, Respuestas,ID_Entrevista,Fase, Calificacion],
+      function (err) {
+        callback(err, this ? this.lastID : null);
+      }
+    );
+  }
+
 };
 
 module.exports = UserModel;

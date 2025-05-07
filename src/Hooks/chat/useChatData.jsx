@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { getPrimeraFasePreguntas } from '../../api/chat';
 
 
-const usePrimeraFasePreguntas = () => {
+
+export const usePrimeraFasePreguntas = () => {
     const [primeraFasePreguntas, setPrimeraFasePreguntas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -28,5 +29,3 @@ const usePrimeraFasePreguntas = () => {
 
     return { primeraFasePreguntas, loading, error };
 }
-
-export default usePrimeraFasePreguntas;
