@@ -17,6 +17,8 @@ const baseNavigation = [
   { name: 'Inicio', to: '/' },
   { name: 'Chat', to: '/Chat' },
   { name: 'Recursos', to: '/Recursos' },
+  { name: 'Integración Laboral', to: '/IntegracionLaboral' },
+  
 ];
 const userNavigation = [
   { name: 'Perfil', href: '/Perfil' },
@@ -36,6 +38,9 @@ export default function Header({ isOpen, showSidebar }) {
     if (!user) {
       return [{ name: 'Inicio', to: '/' }];
     }
+    /*if (user.role === 'Aspirante') {
+      return baseNavigation.filter(item => item.name !== 'Integración Laboral');
+    }*/
     if (user.role === 'Empleador') {
       return baseNavigation.filter(item => item.name !== 'Chat');
     }

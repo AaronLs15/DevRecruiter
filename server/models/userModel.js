@@ -6,7 +6,7 @@ const MODEL_NAME = process.env.OLLAMA_MODEL || 'llama3.2';
 
 const UserModel = {
   getAllUsers: (callback) => {
-    const sql = "SELECT * FROM usuarios";
+    const sql = "SELECT * FROM usuarios where Rol = 'Aspirante'";
     db.all(sql, [], callback);
   },
 
