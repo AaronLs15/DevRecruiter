@@ -6,6 +6,7 @@ import Header from './components/Header';
 import SideBar from './components/SideBar';
 import ChatInterface from './components/Chat';
 import Recursos from './components/Recursos';
+import IntegracionLaboral from './components/IntegracionLaboral';
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +24,7 @@ function App() {
               {/* Si quieres que Chat vaya en una ruta aparte: */}
               <Route path="/Chat" element={<ChatInterface />} />
               {/* Ruta “catch-all” */}
+              <Route path="/IntegracionLaboral" element={<IntegracionLaboral />} />
             </Routes>
           </main>
         </div>

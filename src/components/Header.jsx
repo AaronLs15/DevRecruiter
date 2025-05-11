@@ -8,6 +8,7 @@ const navigation = [
   { name: 'Inicio', to: '/' },
   { name: 'Chat', to: '/Chat' },
   { name: 'Recursos', to: '/Recursos' },
+  { name: 'IntegracionLaboral', to: '/IntegracionLaboral' },
 ];
 
 const userNavigation = [
