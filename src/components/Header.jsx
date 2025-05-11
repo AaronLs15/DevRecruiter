@@ -14,7 +14,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const baseNavigation = [
-  { name: 'Inicio', to: '/' },
+  { name: 'Inicio', to: '/Inicio' },
   { name: 'Chat', to: '/Chat' },
   { name: 'Recursos', to: '/Recursos' },
   { name: 'Integración Laboral', to: '/IntegracionLaboral' },
@@ -36,11 +36,11 @@ export default function Header({ isOpen, showSidebar }) {
   // Determinar links según estado y rol
   const navigation = React.useMemo(() => {
     if (!user) {
-      return [{ name: 'Inicio', to: '/' }];
+      return [{ name: 'Inicio', to: '/Inicio' }];
     }
-    /*if (user.role === 'Aspirante') {
+    if (user.role === 'Aspirante') {
       return baseNavigation.filter(item => item.name !== 'Integración Laboral');
-    }*/
+    }
     if (user.role === 'Empleador') {
       return baseNavigation.filter(item => item.name !== 'Chat');
     }

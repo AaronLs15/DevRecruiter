@@ -9,6 +9,8 @@ import ChatInterface from './components/Chat';
 import Recursos from './components/Recursos';
 import Login from './components/Login';
 import IntegracionLaboral from './components/IntegracionLaboral';
+import Home from './components/Inicio';
+
 
 // Un wrapper para poder usar useLocation
 function AppWrapper() {
@@ -46,6 +48,7 @@ function App() {
               : 'ml-0'}`}
         >
           <Routes>
+            <Route path="/Inicio" element={<Home />} />
             <Route path="/Recursos" element={<Recursos />} />
             <Route path="/Chat" element={<ChatInterface />} />
             <Route path="/Login" element={<Login />} />

@@ -30,6 +30,26 @@ export const actUsuario = async ({data}) => {
   }
 }
 
+export const actAspirante = async ({data}) => {
+  try {
+    const response = await axios.post('http://localhost:5000/api/actAspirante',data);
+    return response.data; // Devuelve los datos del usuario
+  } catch (error) {
+    console.error('Error al obtener los datos del usuario:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const actEmpleador = async ({data}) => {
+  try {
+    const response = await axios.post('http://localhost:5000/api/actEmpleador',data);
+    return response.data; // Devuelve los datos del usuario
+  } catch (error) {
+    console.error('Error al obtener los datos del usuario:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
 export const iniciarSesion = async ({ data }) => {
   try {
     const response = await axios.post(
@@ -111,6 +131,36 @@ export const actCalificacionSegundaFase = async ({data}) => {
     return response.data; 
   } catch (error) {
     console.error('Error al actualizar la calificación de la segunda fase:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const actFeedbackEntrevista = async ({data}) => {
+  try {
+    const response = await axios.post('http://localhost:5000/api/actFeedbackEntrevista', data);
+    return response.data; 
+  } catch (error) {
+    console.error('Error al actualizar el feedback de la entrevista:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const actEntrevistaFinalizada = async ({data}) => {
+  try {
+    const response = await axios.post('http://localhost:5000/api/actEntrevistaFinalizada', data);
+    return response.data; 
+  } catch (error) {
+    console.error('Error al actualizar la entrevista finalizada:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const getEntrevistaByUserID = async (ID) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/Entrevista/${ID}`); // Cambia la URL si es necesario
+    return response.data; // Devuelve los datos de la entrevista
+  } catch (error) {
+    console.error('Error al obtener los datos de la entrevista:', error);
     throw error; // Lanza el error para manejarlo en el hook
   }
 }

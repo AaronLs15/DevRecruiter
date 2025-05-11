@@ -43,6 +43,34 @@ const userController = {
     });
   },
 
+  actAspirante: (req, res) => {
+    const {ID_Usuario,Experiencia,Puesto_Aspirado,Habilidades,Ubicacion} = req.body;
+    // Validación básica
+    if (!ID_Usuario || !Experiencia || !Puesto_Aspirado || !Habilidades || !Ubicacion) {
+      return res.status(400).json({ error: "Te hacen falta datos" });
+    }
+    UserModel.actAspirante({ID_Usuario,Experiencia,Puesto_Aspirado,Habilidades,Ubicacion}, (err, lastID) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ id: lastID });
+    });
+  },
+
+  actEmpleador: (req, res) => {
+    const {ID_Usuario,Empresa} = req.body;
+    // Validación básica
+    if (!ID_Usuario || !Empresa) {
+      return res.status(400).json({ error: "Te hacen falta datos" });
+    }
+    UserModel.actEmpleador({ID_Usuario,Empresa}, (err, lastID) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ id: lastID });
+    });
+  },
+
   iniciarSesion: (req, res) => {
     const { Email, Password } = req.body;
     if (!Email || !Password) {
@@ -126,6 +154,43 @@ const userController = {
       res.status(500).json({ error: err.message });
     }
   },
+
+  actFeedbackEntrevistau: async (req, res) => {
+    try {
+      const { ID_Entrevista, Feedback } = req.body;
+      if (!ID_Entrevista || !Feedback) {
+        return res.status(400).json({ error: 'Faltan campos requeridos en el payload' });
+      }
+
+      await UserModel.actFeedbackEntrevista(ID_Entrevista, Feedback);
+      res.json({ message: 'Feedback actualizado correctamente' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  actEntrevistaFinalizada: async (req, res) => {
+    try {
+      const { ID_Entrevista,EntrevistaText } = req.body;
+      if (!ID_Entrevista || !EntrevistaText) {
+        return res.status(400).json({ error: 'Faltan campos requeridos en el payload' });
+      }
+      await UserModel.actEntrevistaFinal(ID_Entrevista, EntrevistaText);
+      res.json({ message: 'Entrevista actualizada correctamente' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  getEntrevistaByUserID: (req, res) => {
+    const { ID_Usuario } = req.params;
+    UserModel.getEntrevistaByUserID(ID_Usuario, (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ data: rows });
+    });
+  }
 
 };
 

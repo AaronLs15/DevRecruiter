@@ -4,21 +4,17 @@ import { useLogin } from '../Hooks/Login/useLogin';
 export default function Login() {
   const {
     isLogin,
-    name,
-    setName,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    isEmployer,
-    setIsEmployer,
-    error,
-    success,
-    handleToggle,
-    handleSubmit
+    name, setName,
+    email, setEmail,
+    password, setPassword,
+    isEmployer, setIsEmployer,
+    error, success,
+    handleToggle, handleSubmit,
+    showModal,setShowModal, extraData, handleExtraChange, handleExtraSubmit
   } = useLogin();
 
   return (
+    <>
     <div className="max-w-md mx-auto mt-8 p-6 bg-white shadow-lg rounded-2xl">
       <div className="flex justify-center mb-6">
         <button
@@ -113,5 +109,81 @@ export default function Login() {
         </button>
       </form>
     </div>
+    {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-full max-w-lg">
+            <h3 className="text-xl mb-4">
+              {isEmployer ? 'Información de Empresa' : 'Información de Aspirante'}
+            </h3>
+
+            {isEmployer ? (
+              <div className="mb-4">
+                <label className="block mb-1">Empresa</label>
+                <input
+                  name="Empresa"
+                  value={extraData.Empresa}
+                  onChange={handleExtraChange}
+                  className="w-full border px-3 py-2 rounded"
+                />
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <label className="block mb-1">Experiencia</label>
+                  <input
+                    name="Experiencia"
+                    value={extraData.Experiencia}
+                    onChange={handleExtraChange}
+                    className="w-full border px-3 py-2 rounded"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block mb-1">Puesto Aspirado</label>
+                  <input
+                    name="Puesto_Aspirado"
+                    value={extraData.Puesto_Aspirado}
+                    onChange={handleExtraChange}
+                    className="w-full border px-3 py-2 rounded"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block mb-1">Habilidades</label>
+                  <input
+                    name="Habilidades"
+                    value={extraData.Habilidades}
+                    onChange={handleExtraChange}
+                    className="w-full border px-3 py-2 rounded"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block mb-1">Ubicación</label>
+                  <input
+                    name="Ubicacion"
+                    value={extraData.Ubicacion}
+                    onChange={handleExtraChange}
+                    className="w-full border px-3 py-2 rounded"
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleExtraSubmit}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -5,7 +5,7 @@ import useInterviewChat from '../Hooks/chat/useChat';
 
 
 export default function ChatInterface() {
-  const { input, setInput, chatHistory, loading, sendUserMessage } = useInterviewChat();
+  const { input, setInput, chatHistory, loading, sendUserMessage,isFeedbackSent } = useInterviewChat();
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -39,12 +39,12 @@ export default function ChatInterface() {
           value={input}
           onChange={e => setInput(e.target.value)}
           placeholder="Escribe tu mensaje..."
-          disabled={loading}
+          disabled={loading || isFeedbackSent}
           className="flex-1 p-2 border border-white text-white font-bold rounded-l-lg focus:outline-none disabled:opacity-50 text-lg"
         />
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || isFeedbackSent}
           className="p-2 bg-blue-800 text-white border rounded-r-lg flex items-center justify-center disabled:opacity-50"
         >
           {loading ? <FaSpinner className="animate-spin" size={24} /> : <FaArrowAltCircleUp size={24} />}

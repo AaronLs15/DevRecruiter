@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { sendMessageToOllama } from '../../api/ia/ollama';
 import { usePrimeraFasePreguntas } from './useChatData';
-import { createEntrevista, actCalificacionPrimeraFase, actCalificacionSegundaFase } from '../../api/chat';
+import { createEntrevista, actCalificacionPrimeraFase, actCalificacionSegundaFase, actFeedbackEntrevista,actEntrevistaFinalizada } from '../../api/chat';
 import useUserData from './useUserData';
 
 const VALID_ROLES = ['fullstack', 'backend', 'frontend'];
@@ -35,6 +35,11 @@ export default function useInterviewChat() {
 
   const [entrevistaId, setEntrevistaId] = useState(null);
   const { userData } = useUserData();
+
+  // feedback capturado y estado de bloqueo
+  const [feedbackEntrevista, setFeedbackEntrevista] = useState(null);
+  const [isFeedbackSent, setIsFeedbackSent] = useState(false);
+
 
   // Mensaje inicial
   useEffect(() => {
@@ -240,24 +245,56 @@ export default function useInterviewChat() {
      El chat es el siguiente: ${chatHistory.map(m => `${m.sender}: ${m.text}`).join(' ')}`;
 
     sendMessageToOllama(prompt)
-      .then(raw => {
-        const retro = raw.split(/\r?\n/).find(l => l.trim());
+      .then(async raw => {
+        const fullFeedback = raw.trim();
 
-        setChatHistory(prev => [...prev, { text: `${retro}`, sender: 'bot' }]);
-        //separar por párrafos
-        raw.trim().split(/\n{2,}/).forEach(parrafo => {
-          setChatHistory(prev => [...prev, { text: parrafo.trim(), sender: 'bot' }]);
+        // 1) guardarlo en estado y enviar al backend
+        setFeedbackEntrevista(fullFeedback);
+        await actFeedbackEntrevista({
+          data: { ID_Entrevista: entrevistaId, Feedback: fullFeedback }
         });
+        setIsFeedbackSent(true);
 
+        // 2) añadir cada párrafo al chat para mostrarlo
+        const nuevosMensajes = raw
+          .trim()
+          .split(/\n{2,}/)
+          .map(parrafo => ({ text: parrafo.trim(), sender: 'bot' }));
+        setChatHistory(prev => [...prev, ...nuevosMensajes]);
+
+        // 3) **COMPILAR Y ENVIAR TODO EL CHAT** al endpoint de entrevista finalizada
+        const historialCompleto = [
+          // partimos de lo que ya había antes
+          ...chatHistory,
+          // luego los párrafos que acabamos de añadir
+          ...nuevosMensajes
+        ];
+        const textoPlano = historialCompleto
+          .map(msg => `${msg.sender}: ${msg.text}`)
+          .join('\n');
+
+        try {
+          await actEntrevistaFinalizada({
+            data: {
+              ID_Entrevista: entrevistaId,
+              EntrevistaText: textoPlano
+            }
+          });
+        } catch (err) {
+          console.error('Error al notificar entrevista finalizada:', err);
+        }
       })
       .catch(err => {
         console.error('Error obteniendo retroalimentación:', err);
-        setChatHistory(prev => [...prev, { text: 'Error obteniendo retroalimentación. Intenta más tarde.', sender: 'bot' }]);
+        setChatHistory(prev => [
+          ...prev,
+          { text: 'Error obteniendo retroalimentación. Intenta más tarde.', sender: 'bot' }
+        ]);
       })
       .finally(() => {
         setLoading(false);
       });
-  }
+}
 
-  return { input, setInput, chatHistory, loading, sendUserMessage };
+  return { input, setInput, chatHistory, loading, sendUserMessage, isFeedbackSent };
 }

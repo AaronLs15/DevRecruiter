@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
 import { getUserByID } from '../api/chat';
 
@@ -20,7 +19,8 @@ export function AuthProvider({ children }) {
         id: data.ID,
         name: data.Nombre_usuario,
         email: data.Email,
-        role: data.Rol
+        role: data.Rol,
+        countEntrevista: data.entrevistaCount
       }))
       .catch(() => {
         localStorage.clear();
@@ -38,7 +38,8 @@ export function AuthProvider({ children }) {
         id: data.ID,
         name: data.Nombre_usuario,
         email: data.Email,
-        role: data.Rol
+        role: data.Rol,
+        countEntrevista: data.entrevistaCount
       }));
   };
 

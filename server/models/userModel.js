@@ -6,12 +6,45 @@ const MODEL_NAME = process.env.OLLAMA_MODEL || 'llama3.2';
 
 const UserModel = {
   getAllUsers: (callback) => {
-    const sql = "SELECT * FROM usuarios where Rol = 'Aspirante'";
+    const sql = `
+      SELECT
+        u.*,
+        a.Experiencia,
+        a.Puesto_Aspirado,
+        a.Habilidades,
+        (
+          SELECT json_group_array(
+            json_object(
+              'Tipo_Entrevista', e.Tipo_Entrevista,
+              'Puntaje_Total', e.Puntaje_Total,
+              'Fecha_Entrevista', e.Fecha_Entrevista,
+              'Feedback', e.Feedback
+            )
+          )
+          FROM Entrevista e
+          WHERE e.ID_Aspirante = u.id
+            AND e.Estado = 'Finalizada'
+        ) AS entrevistas
+      FROM usuarios u
+      LEFT JOIN Aspirante a
+        ON u.id = a.ID_Usuario
+      WHERE u.Rol = 'Aspirante'
+    `;
     db.all(sql, [], callback);
   },
 
   getUserByID: (ID, callback) => {
-    const sql = "SELECT * FROM usuarios WHERE ID = ?";
+    const sql = `
+      SELECT
+        u.*,
+        (
+          SELECT COUNT(*)
+          FROM Entrevista e
+          WHERE e.ID_Aspirante = u.ID
+        ) AS entrevistaCount
+      FROM usuarios u
+      WHERE u.ID = ?
+    `;
     db.get(sql, [ID], callback);
   },
 
@@ -22,11 +55,30 @@ const UserModel = {
     });
   },
 
+  actAspirante: ({ID_Usuario, Experiencia, Puesto_Aspirado, Habilidades, Ubicacion}, callback) => {
+    const sql = `
+      INSERT INTO Aspirante (ID_Usuario, Experiencia, Puesto_Aspirado, Habilidades, Ubicacion, ID_Estadistica)
+      VALUES (?, ?, ?, ?, ?, 0)
+    `;
+    db.run(sql, [ID_Usuario, Experiencia, Puesto_Aspirado, Habilidades, Ubicacion], function(err) {
+      callback(err, this ? this.lastID : null);
+    });
+  },
+
+  actEmpleador: ({ID_Usuario, Empresa}, callback) => {
+    const sql = `
+      INSERT INTO Empleador (ID_Usuario, Nombre_Empresa, ID_Sector)
+      VALUES (?, ?, 0)
+    `;
+    db.run(sql, [ID_Usuario, Empresa], function(err) {
+      callback(err, this ? this.lastID : null);
+    });
+  },
+
   iniciarSesion: ({ Email, Password }, callback) => {
     const sql = "SELECT * FROM usuarios WHERE Email = ? AND Contraseña = ?";
     db.all(sql, [Email, Password], callback);
   },
-    
 
   getPrimeraFase: (callback) => {
     const sql = `
@@ -127,6 +179,48 @@ const UserModel = {
         }
       );
     });
+  },
+
+  actFeedbackEntrevista: (ID_Entrevista, Feedback) => {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE Entrevista
+         SET Feedback = ?
+         WHERE ID_Entrevista = ?`,
+        [Feedback, ID_Entrevista],
+        function(err) {
+          if (err) return reject(err);
+          resolve(this.changes);
+        }
+      );
+    });
+  },
+
+  actEntrevistaFinal: (ID_Entrevista, EntrevistaText) => {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE Entrevista
+         SET Entrevista = ?
+         WHERE ID_Entrevista = ?`,
+        [EntrevistaText, ID_Entrevista],
+        function(err) {
+          if (err) return reject(err);
+          resolve(this.changes);
+        }
+      );
+    })
+  },
+
+  getEntrevistaByUserID: (ID_Usuario, callback) => {
+    const sql = `
+      SELECT 
+      'Entrevista' + e.ID_Entrevista AS Folio,
+      e.Tipo_Entrevista,
+      e.Estado
+      FROM Entrevista e
+      WHERE u.Aspirante = ?
+    `;
+    db.all(sql, [ID_Usuario], callback);
   }
 };
 

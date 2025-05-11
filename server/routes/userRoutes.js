@@ -12,6 +12,12 @@ router.get('/Users/:ID', userController.getUserByID);
 // Ruta para agregar un nuevo usuario
 router.post('/actUser', userController.createUser);
 
+// Ruta para agregar un nuevo aspirante
+router.post('/actAspirante', userController.actAspirante);
+
+// Ruta para agregar un nuevo empleador
+router.post('/actEmpleador', userController.actEmpleador);
+
 // Ruta para iniciar sesión
 router.post('/iniciarSesion', userController.iniciarSesion);
 
@@ -26,5 +32,14 @@ router.post('/actCalificacionPrimeraFase', userController.actCalificacionPrimera
 
 // Ruta para insertar la calificacion de la segunda fase
 router.post('/actCalificacionSegundaFase', userController.actCalificacionSegundaFase);
+
+// Ruta para insertar el feedback de la entrevista
+router.post('/actFeedbackEntrevista', userController.actFeedbackEntrevistau);
+
+//Ruta para insertar entrevista ya finalizada
+router.post('/actEntrevistaFinalizada', userController.actEntrevistaFinalizada);
+
+//Ruta para obtener Entrevistas
+router.post('/Entrevistas', userController.getEntrevistaByUserID);
 
 module.exports = router;
