@@ -61,7 +61,7 @@ export default function useInterviewChat() {
     if (respuestasPrimeraF.length === PRIMERA_LIMIT && entrevistaId === null) {
       (async () => {
         try {
-          const idUser = userData[0].id;
+          const idUser = localStorage.getItem('userID');
           const sectorId = 1;
           const tipo = role.toLowerCase();
           const idEnt = await createEntrevista({ ID_Aspirante: idUser, ID_Sector: sectorId, Tipo_Entrevista: tipo });
@@ -81,7 +81,7 @@ export default function useInterviewChat() {
         setLoading(true);
         const preguntasArr = primeraFasePreguntas.slice(0, PRIMERA_LIMIT).map(p => p.pregunta);
         const respuestasArr = respuestasPrimeraF;
-        const prompt = `a partir de las siguientes preguntas ${preguntasArr.join(', ')} y sus respuestas ${respuestasArr.join(', ')} calificalas de 0 a 100 simulando una entrevista para un desarrollador ${role} solo retorname la calificacion que le das`;
+        const prompt = `a partir de las siguientes preguntas ${preguntasArr.join(', ')} y sus respuestas ${respuestasArr.join(', ')} calificalas de 1 a 100 siendo 1 el valor minimo simulando una entrevista para un desarrollador ${role} solo retorname la calificacion que le das`;
         try {
           const raw = await sendMessageToOllama(prompt);
           const match = raw.match(/\d+/);
@@ -170,7 +170,7 @@ export default function useInterviewChat() {
       setRespuestasSegundaF(prev => [...prev, nuevaRespuesta]);
       setLoading(true);
       try {
-        const evalPrompt = `A partir de la pregunta: "${currentSegundaPregunta}" y esta respuesta: "${trimmed}", califícala en una escala de 0 a 100.`;
+        const evalPrompt = `A partir de la pregunta: "${currentSegundaPregunta}" y esta respuesta: "${trimmed}", califícala en una escala de 1 a 100.`;
         const evalRaw = await sendMessageToOllama(evalPrompt);
         const match = evalRaw.match(/\d+/);
         const score = match ? parseInt(match[0], 10) : previousScore;
@@ -227,8 +227,37 @@ export default function useInterviewChat() {
       } catch (err) {
         console.error('Error guardando calificación segunda fase:', err);
       }
+
+      ReturnRetro();
+      setChatHistory(prev => [...prev, { text: '¡Entrevista finalizada! Aquí tienes una retroalimentación:', sender: 'bot' }]);
     }
+
   };
+
+  const ReturnRetro = () => {
+    setLoading(true);
+    const prompt = `A partir del siguiente chat que se ha dado entre un aspirante a desarrollador ${role} y un reclutador, dame una retroalimentación de lo que le falta al aspirante para mejorar su entrevista incluye links de informacion, paginas web o videos que pueda ver el aspirante para desarrollarse mejor, al igual la respuesta que me des estructurala como si estuvieras hablando directamente con el aspirante.
+     El chat es el siguiente: ${chatHistory.map(m => `${m.sender}: ${m.text}`).join(' ')}`;
+
+    sendMessageToOllama(prompt)
+      .then(raw => {
+        const retro = raw.split(/\r?\n/).find(l => l.trim());
+
+        setChatHistory(prev => [...prev, { text: `${retro}`, sender: 'bot' }]);
+        //separar por párrafos
+        raw.trim().split(/\n{2,}/).forEach(parrafo => {
+          setChatHistory(prev => [...prev, { text: parrafo.trim(), sender: 'bot' }]);
+        });
+
+      })
+      .catch(err => {
+        console.error('Error obteniendo retroalimentación:', err);
+        setChatHistory(prev => [...prev, { text: 'Error obteniendo retroalimentación. Intenta más tarde.', sender: 'bot' }]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }
 
   return { input, setInput, chatHistory, loading, sendUserMessage };
 }

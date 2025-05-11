@@ -6,8 +6,14 @@ const userController = require('../controllers/userController');
 // Ruta para obtener todos los usuarios
 router.get('/Users', userController.getAllUsers);
 
+// Ruta para obtener un usuario por ID
+router.get('/Users/:ID', userController.getUserByID);
+
 // Ruta para agregar un nuevo usuario
 router.post('/actUser', userController.createUser);
+
+// Ruta para iniciar sesión
+router.post('/iniciarSesion', userController.iniciarSesion);
 
 // Ruta para obtener las preguntas de la primera fase
 router.get('/PrimeraFasePreguntas', userController.getPrimeraFase);

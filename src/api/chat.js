@@ -10,6 +10,39 @@ export const getUsersData = async () => {
   }
 };
 
+export const getUserByID = async (ID) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/Users/${ID}`); // Cambia la URL si es necesario
+    return response.data; // Devuelve los datos del usuario
+  } catch (error) {
+    console.error('Error al obtener los datos del usuario:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const actUsuario = async ({data}) => {
+  try {
+    const response = await axios.post('http://localhost:5000/api/actUser',data);
+    return response.data; // Devuelve los datos del usuario
+  } catch (error) {
+    console.error('Error al obtener los datos del usuario:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const iniciarSesion = async ({ data }) => {
+  try {
+    const response = await axios.post(
+      'http://localhost:5000/api/iniciarSesion',
+      data
+    );
+    return response.data.data[0];
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error);
+    throw error;
+  }
+};
+
 export const getPrimeraFasePreguntas= async () => {
   try {
     const response = await axios.get('http://localhost:5000/api/PrimeraFasePreguntas'); // Cambia la URL si es necesario
