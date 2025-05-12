@@ -55,7 +55,7 @@ export function useLogin() {
           localStorage.setItem('userRole', user.Rol);
           setSuccess('Sesión iniciada correctamente.');
           markAuthenticated();
-          navigate('/Chat');
+          navigate('/Inicio');
           return;
         }
         setError('Correo o contraseña no son válidos.');

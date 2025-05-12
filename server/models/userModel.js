@@ -221,6 +221,55 @@ const UserModel = {
       WHERE u.Aspirante = ?
     `;
     db.all(sql, [ID_Usuario], callback);
+  },
+
+  getProfileData: (ID_Usuario, rol, callback) => {
+    let sql;
+
+    if (rol === 'Aspirante') {
+      sql = `
+        SELECT 
+          u.Nombre_usuario,
+          u.Email,
+          a.Experiencia,
+          a.Puesto_Aspirado,
+          a.Habilidades,
+          a.Ubicacion
+        FROM usuarios u
+        LEFT JOIN Aspirante a 
+          ON u.ID = a.ID_Usuario
+        WHERE u.ID = ?
+      `;
+    } 
+    else if (rol === 'Empleador') {
+      sql = `
+        SELECT 
+          u.Nombre_usuario,
+          u.Email,
+          emp.Nombre_Empresa AS Empresa,
+          emp.ID_Sector AS Rubro
+        FROM usuarios u
+        LEFT JOIN Empleador emp 
+          ON u.ID = emp.ID_Usuario
+        WHERE u.ID = ?
+      `;
+    } 
+    else {
+      return callback(new Error('Rol de usuario inválido'));
+    }
+
+    db.get(sql, [ID_Usuario], callback);
+  },
+
+  getPuntajes: (ID_Usuario, callback) => {
+    const sql = `
+      SELECT 
+        e.Fecha_Entrevista,
+        e.Puntaje_Total
+      FROM Entrevista e
+      WHERE e.ID_Aspirante = ?
+    `;
+    db.all(sql, [ID_Usuario], callback);
   }
 };
 

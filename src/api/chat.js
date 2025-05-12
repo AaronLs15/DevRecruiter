@@ -164,3 +164,23 @@ export const getEntrevistaByUserID = async (ID) => {
     throw error; // Lanza el error para manejarlo en el hook
   }
 }
+
+export const getProfileByID = async (ID, Rol) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/users/${ID}/profile?Rol=${encodeURIComponent(Rol)}`);
+    return response.data; // Devuelve los datos del perfil
+  } catch (error) {
+    console.error('Error al obtener los datos del perfil:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const getPuntajesEntrevista = async (ID) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/users/${ID}/interviews`);
+    return response.data; // Devuelve los datos de la entrevista
+  } catch (error) {
+    console.error('Error al obtener los datos de la entrevista:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}

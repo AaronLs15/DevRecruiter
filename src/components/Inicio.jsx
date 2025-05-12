@@ -44,7 +44,7 @@ export default function Home() {
     seccionesMostradas = secciones.filter(s => [1, 3].includes(s.id));
   } else if (user.role === 'Empleador') {
     // Empleador: todas las secciones
-    seccionesMostradas = secciones;
+    seccionesMostradas = secciones.filter(s => [2, 3].includes(s.id));
   } else {
     // Por defecto, mostrar todas
     seccionesMostradas = secciones;

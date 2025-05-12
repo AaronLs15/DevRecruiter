@@ -190,6 +190,32 @@ const userController = {
       }
       res.json({ data: rows });
     });
+  },
+
+  getProfile: (req, res) => {
+    const ID_Usuario = req.params.id;
+    // Toma el Rol del query string
+    const rol = req.query.Rol;
+
+    if (!rol) {
+      return res.status(400).json({ message: 'Falta el parámetro Rol' });
+    }
+
+    UserModel.getProfileData(ID_Usuario, rol, (err, profile) => {
+      if (err) return res.status(400).json({ error: err.message });
+      if (!profile) return res.status(404).json({ message: 'Perfil no encontrado' });
+      res.json(profile);
+    });
+  },
+
+  getPuntajes: (req, res) => {
+    const ID_Usuario = req.params.id;
+    UserModel.getPuntajes(ID_Usuario, (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ data: rows });
+    });
   }
 
 };

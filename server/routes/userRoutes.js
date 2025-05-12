@@ -42,4 +42,10 @@ router.post('/actEntrevistaFinalizada', userController.actEntrevistaFinalizada);
 //Ruta para obtener Entrevistas
 router.post('/Entrevistas', userController.getEntrevistaByUserID);
 
+// Ruta para obtener los datos del perfil de un usuario
+router.get('/users/:id/profile', userController.getProfile);
+
+// Ruta para obtener los puntajes de un usuario
+router.get('/users/:id/interviews', userController.getPuntajes);
+
 module.exports = router;
