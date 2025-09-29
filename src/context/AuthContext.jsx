@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { getUserByID } from '../api/chat';
+import { getUserByID,getUserDiasActivo } from '../api/chat';
 
 export const AuthContext = createContext({
   user: null,
@@ -20,12 +20,18 @@ export function AuthProvider({ children }) {
         name: data.Nombre_usuario,
         email: data.Email,
         role: data.Rol,
-        countEntrevista: data.entrevistaCount
+        countEntrevista: data.entrevistaCount,
+        diasActivo: data.DiasActivo
       }))
       .catch(() => {
         localStorage.clear();
         setUser(null);
       });
+    getUserDiasActivo(id)
+      .then(({ data }) => data && setUser({
+        ...user,
+        diasActivo: data.DiasActivo
+      }));
   }, []);
 
   const markAuthenticated = () => {
@@ -39,7 +45,14 @@ export function AuthProvider({ children }) {
         name: data.Nombre_usuario,
         email: data.Email,
         role: data.Rol,
-        countEntrevista: data.entrevistaCount
+        countEntrevista: data.entrevistaCount,
+        diasActivo: data.DiasActivo
+      }));
+
+    getUserDiasActivo(id)
+      .then(({ data }) => data && setUser({
+        ...user,
+        diasActivo: data.DiasActivo
       }));
   };
 

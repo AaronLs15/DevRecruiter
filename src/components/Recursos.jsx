@@ -1,139 +1,739 @@
-// src/components/Recursos.jsx
-import React from 'react';
+import React, { useMemo, useState, useEffect, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import {
+  Search,
+  Filter,
+  Star,
+  StarOff,
+  ExternalLink,
+  Link as LinkIcon,
+  FileText,
+  File,
+  BookOpen,
+  GraduationCap,
+  Hammer,
+  Code2,
+  ListChecks,
+  Copy,
+  Download,
+  Globe,
+  Sparkles,
+} from "lucide-react";
 
-// Objeto que contiene todos los recursos organizados
-const recursos = {
-  documentos: [
-    {
-      id: 1,
-      nombre: "Guía de entrevistas técnicas.pdf",
-      icono: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    {
-      id: 2,
-      nombre: "Preguntas comunes de RRHH.docx",
-      icono: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      )
-    }
-  ],
-  links: [
-    {
-      id: 1,
-      nombre: "Ejemplos de entrevistas técnicas",
-      url: "https://ejemplo.com/entrevistas",
-      icono: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-        </svg>
-      )
-    },
-    {
-      id: 2,
-      nombre: "Blog de preparación laboral",
-      url: "https://blog.ejemplo.com/preparacion",
-      icono: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-        </svg>
-      )
-    }
-  ]
+/**
+ * Recursos.jsx — Sección de recursos con UI mejorada
+ * - Búsqueda en tiempo real
+ * - Filtros por nivel, formato, etiquetas y idioma
+ * - Ordenamiento
+ * - Favoritos (persistencia en localStorage)
+ * - Secciones de Documentos locales y Recursos externos
+ * - Diseño responsive con Tailwind + accesible
+ *
+ * Instrucciones: solo reemplaza tu componente por este archivo.
+ * Opcional: puedes pasar una prop `extraResources` para inyectar recursos desde tu API.
+ */
+
+// --- Catálogo base: recursos para mejorar como programador ---
+const baseResources = [
+  // Documentos locales (ejemplo)
+  {
+    id: "doc-1",
+    type: "document",
+    title: "Guía de entrevistas técnicas.pdf",
+    description: "Preguntas frecuentes, estructuras de datos y consejos.",
+    url: "/docs/guia-entrevistas-tecnicas.pdf",
+    tags: ["Entrevistas", "Algoritmos"],
+    level: "Intermedio",
+    format: "Documento",
+    lang: "ES",
+  },
+  {
+    id: "doc-2",
+    type: "document",
+    title: "Preguntas comunes de RRHH.docx",
+    description: "Respuestas modelo y buenas prácticas.",
+    url: "/docs/preguntas-rrhh.docx",
+    tags: ["Entrevistas", "Soft Skills"],
+    level: "Básico",
+    format: "Documento",
+    lang: "ES",
+  },
+
+  // Recursos externos (curados)
+  {
+    id: "ext-1",
+    type: "link",
+    title: "roadmap.sh",
+    description: "Roadmaps interactivos para Frontend, Backend, DevOps y más.",
+    url: "https://roadmap.sh/",
+    tags: ["Frontend", "Backend", "DevOps"],
+    level: "Básico",
+    format: "Roadmap",
+    lang: "EN",
+  },
+  {
+    id: "ext-2",
+    type: "link",
+    title: "freeCodeCamp",
+    description: "Cursos gratuitos con proyectos prácticos.",
+    url: "https://www.freecodecamp.org/",
+    tags: ["Web", "Frontend", "Backend"],
+    level: "Básico",
+    format: "Curso",
+    lang: "EN",
+  },
+  {
+    id: "ext-3",
+    type: "link",
+    title: "The Odin Project",
+    description: "Currículo full‑stack gratuito y basado en proyectos.",
+    url: "https://www.theodinproject.com/",
+    tags: ["Web", "Full‑Stack"],
+    level: "Intermedio",
+    format: "Curso",
+    lang: "EN",
+  },
+  {
+    id: "ext-4",
+    type: "link",
+    title: "Refactoring.Guru",
+    description: "Patrones de diseño y principios de refactorización.",
+    url: "https://refactoring.guru/",
+    tags: ["Arquitectura", "Buenas Prácticas"],
+    level: "Intermedio",
+    format: "Artículo",
+    lang: "EN",
+  },
+  {
+    id: "ext-5",
+    type: "link",
+    title: "Clean Code (resumen)",
+    description: "Resumen y notas clave de Clean Code (referencia rápida).",
+    url: "https://gist.github.com/eduardolu/clean-code-notes",
+    tags: ["Buenas Prácticas"],
+    level: "Intermedio",
+    format: "Artículo",
+    lang: "ES",
+  },
+  {
+    id: "ext-6",
+    type: "link",
+    title: "LeetCode",
+    description: "Práctica de algoritmos y estructuras de datos.",
+    url: "https://leetcode.com/",
+    tags: ["Algoritmos", "Entrevistas"],
+    level: "Intermedio",
+    format: "Katas",
+    lang: "EN",
+  },
+  {
+    id: "ext-7",
+    type: "link",
+    title: "Codewars",
+    description: "Retos de programación tipo katas con gamificación.",
+    url: "https://www.codewars.com/",
+    tags: ["Katas", "Algoritmos"],
+    level: "Básico",
+    format: "Katas",
+    lang: "EN",
+  },
+  {
+    id: "ext-8",
+    type: "link",
+    title: "Exercism",
+    description: "Mentoría y ejercicios en múltiples lenguajes.",
+    url: "https://exercism.org/",
+    tags: ["Katas"],
+    level: "Básico",
+    format: "Katas",
+    lang: "EN",
+  },
+  {
+    id: "ext-9",
+    type: "link",
+    title: "Frontend Mentor",
+    description: "Desafíos reales de UI para mejorar tu CSS/JS.",
+    url: "https://www.frontendmentor.io/",
+    tags: ["Frontend", "UI"],
+    level: "Intermedio",
+    format: "Práctica",
+    lang: "EN",
+  },
+  {
+    id: "ext-10",
+    type: "link",
+    title: "Advent of Code",
+    description: "Retos anuales de algoritmos en diciembre.",
+    url: "https://adventofcode.com/",
+    tags: ["Algoritmos", "Diversión"],
+    level: "Intermedio",
+    format: "Katas",
+    lang: "EN",
+  },
+  {
+    id: "ext-11",
+    type: "link",
+    title: "PostgreSQL Tutorial",
+    description: "Tutoriales paso a paso para PostgreSQL.",
+    url: "https://www.postgresql.org/docs/current/tutorial.html",
+    tags: ["Bases de Datos"],
+    level: "Intermedio",
+    format: "Documento",
+    lang: "EN",
+  },
+  {
+    id: "ext-12",
+    type: "link",
+    title: "SQLBolt",
+    description: "Lecciones interactivas de SQL en el navegador.",
+    url: "https://sqlbolt.com/",
+    tags: ["Bases de Datos"],
+    level: "Básico",
+    format: "Práctica",
+    lang: "EN",
+  },
+  {
+    id: "ext-13",
+    type: "link",
+    title: "Docker - Getting Started",
+    description: "Guía oficial para comenzar con Docker.",
+    url: "https://docs.docker.com/get-started/",
+    tags: ["DevOps", "Docker"],
+    level: "Básico",
+    format: "Documento",
+    lang: "EN",
+  },
+  {
+    id: "ext-14",
+    type: "link",
+    title: "System Design Primer",
+    description: "Guía popular para entrevistas de diseño de sistemas.",
+    url: "https://github.com/donnemartin/system-design-primer",
+    tags: ["Arquitectura", "Entrevistas"],
+    level: "Avanzado",
+    format: "Repo",
+    lang: "EN",
+  },
+  {
+    id: "ext-15",
+    type: "link",
+    title: "Patterns.dev",
+    description:
+      "Patrones de rendimiento, diseño y arquitectura para web moderna.",
+    url: "https://www.patterns.dev/",
+    tags: ["Frontend", "Arquitectura"],
+    level: "Intermedio",
+    format: "Artículo",
+    lang: "EN",
+  },
+  {
+    id: "ext-16",
+    type: "link",
+    title: "You Don't Know JS (serie)",
+    description: "Libros abiertos sobre JavaScript profundo.",
+    url: "https://github.com/getify/You-Dont-Know-JS",
+    tags: ["JavaScript", "Libros"],
+    level: "Intermedio",
+    format: "Libro",
+    lang: "EN",
+  },
+  {
+    id: "ext-17",
+    type: "link",
+    title: "Frontend Roadmap (ES)",
+    description: "Recorrido sugerido para frontenders en español.",
+    url: "https://roadmap.sh/frontend?lang=es",
+    tags: ["Frontend", "ES"],
+    level: "Básico",
+    format: "Roadmap",
+    lang: "ES",
+  },
+  {
+    id: "ext-18",
+    type: "link",
+    title: "Open Data Structures (Libro)",
+    description: "Libro libre sobre Estructuras de Datos.",
+    url: "https://opendatastructures.org/",
+    tags: ["Algoritmos", "CS"],
+    level: "Avanzado",
+    format: "Libro",
+    lang: "EN",
+  },
+];
+
+const LEVELS = ["Todos", "Básico", "Intermedio", "Avanzado"];
+const FORMATS = [
+  "Todos",
+  "Documento",
+  "Artículo",
+  "Curso",
+  "Katas",
+  "Práctica",
+  "Roadmap",
+  "Repo",
+  "Libro",
+];
+const LANGS = ["Todos", "ES", "EN"];
+const TAGS = [
+  "Frontend",
+  "Backend",
+  "Full‑Stack",
+  "DevOps",
+  "Bases de Datos",
+  "JavaScript",
+  "UI",
+  "Arquitectura",
+  "Algoritmos",
+  "Entrevistas",
+  "Soft Skills",
+  "Buenas Prácticas",
+  "Docker",
+  "Katas",
+  "CS",
+];
+
+const ICONS = {
+  Documento: FileText,
+  Artículo: File,
+  Curso: GraduationCap,
+  Katas: ListChecks,
+  Práctica: Hammer,
+  Roadmap: BookOpen,
+  Repo: Code2,
+  Libro: BookOpen,
 };
 
-export default function Recursos() {
+const FavoriteButton = ({ active, onToggle }) => (
+  <button
+    onClick={onToggle}
+    className={`inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs transition-all border ${
+      active
+        ? "bg-yellow-500/10 border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/20"
+        : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+    }`}
+    aria-pressed={active}
+    aria-label={active ? "Quitar de favoritos" : "Agregar a favoritos"}
+  >
+    {active ? (
+      <Star className="h-3.5 w-3.5" />
+    ) : (
+      <StarOff className="h-3.5 w-3.5" />
+    )}
+    <span>{active ? "Favorito" : "Guardar"}</span>
+  </button>
+);
+
+const Tag = ({ label, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`rounded-full px-3 py-1 text-xs font-medium transition border ${
+      active
+        ? "bg-blue-500/10 border-blue-500/40 text-blue-300"
+        : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+    }`}
+  >
+    #{label}
+  </button>
+);
+
+export default function Recursos({ extraResources = [] }) {
+  const { user } = useContext(AuthContext);
+  const safeUserId =
+    user?.id ?? user?.ID ?? user?.Id ?? user?.Id_Usuario ?? "anon";
+  const counterKey = `recursos:consultados:${safeUserId}`;
+
+  const [query, setQuery] = useState("");
+  const [level, setLevel] = useState("Todos");
+  const [format, setFormat] = useState("Todos");
+  const [lang, setLang] = useState("Todos");
+  const [activeTags, setActiveTags] = useState([]);
+  const [onlyFavs, setOnlyFavs] = useState(false);
+  const [sortBy, setSortBy] = useState("Relevancia");
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("recursos:favoritos") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const bumpConsulted = () => {
+    try {
+      const current = parseInt(localStorage.getItem(counterKey) || "0", 10);
+      const next = (Number.isFinite(current) ? current : 0) + 1;
+      localStorage.setItem(counterKey, String(next));
+      // Notifica a Home si está montado (actualiza en vivo)
+      window.dispatchEvent(new Event("recurso:consultado"));
+    } catch {
+      // noop
+    }
+  };
+
+  useEffect(() => {
+    localStorage.setItem("recursos:favoritos", JSON.stringify(favorites));
+  }, [favorites]);
+
+  const allResources = useMemo(() => {
+    // Permite inyectar más recursos desde props (API)
+    return [...baseResources, ...extraResources];
+  }, [extraResources]);
+
+  const toggleTag = (t) =>
+    setActiveTags((prev) =>
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+    );
+
+  const toggleFavorite = (id) =>
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+
+  const filtered = useMemo(() => {
+    return allResources
+      .filter((r) => (onlyFavs ? favorites.includes(r.id) : true))
+      .filter((r) => (level === "Todos" ? true : r.level === level))
+      .filter((r) => (format === "Todos" ? true : r.format === format))
+      .filter((r) => (lang === "Todos" ? true : r.lang === lang))
+      .filter((r) =>
+        activeTags.length === 0
+          ? true
+          : activeTags.every((t) => r.tags?.includes(t))
+      )
+      .filter((r) => {
+        if (!query.trim()) return true;
+        const q = query.toLowerCase();
+        return (
+          r.title.toLowerCase().includes(q) ||
+          r.description.toLowerCase().includes(q) ||
+          r.tags?.some((t) => t.toLowerCase().includes(q))
+        );
+      })
+      .sort((a, b) => {
+        if (sortBy === "A‑Z") return a.title.localeCompare(b.title);
+        if (sortBy === "Z‑A") return b.title.localeCompare(a.title);
+        if (sortBy === "Formato")
+          return (a.format || "").localeCompare(b.format || "");
+        // Relevancia básica: favoritos primero, luego por coincidencia de query
+        const aFav = favorites.includes(a.id) ? 1 : 0;
+        const bFav = favorites.includes(b.id) ? 1 : 0;
+        if (aFav !== bFav) return bFav - aFav;
+        return 0;
+      });
+  }, [
+    allResources,
+    favorites,
+    onlyFavs,
+    level,
+    format,
+    lang,
+    activeTags,
+    query,
+    sortBy,
+  ]);
+
+  const documents = filtered.filter((r) => r.type === "document");
+  const externals = filtered.filter((r) => r.type === "link");
+
+  const ResultCount = () => (
+    <div className="text-sm text-white/60">
+      {filtered.length} resultado{filtered.length !== 1 ? "s" : ""}
+      {onlyFavs ? " — mostrando favoritos" : ""}
+    </div>
+  );
+
   return (
-    <div className="text-white p-6 bg-gray-900 rounded-lg min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Recursos</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Sección de Documentos */}
-        <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-          <div className="flex items-center mb-4">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6 mr-2 text-blue-400" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h2 className="text-xl font-semibold">Documentos</h2>
-          </div>
-          <div className="space-y-3">
-            {recursos.documentos.map((doc) => (
-              <div key={doc.id} className="flex items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer">
-                {doc.icono}
-                <span>{doc.nombre}</span>
-              </div>
-            ))}
+    <div className="text-white p-6 md:p-8 bg-gradient-to-b from-gray-950 to-gray-900 rounded-2xl min-h-screen">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight flex items-center gap-2">
+            <Sparkles className="h-7 w-7 text-blue-400" /> Recursos
+          </h1>
+          <p className="text-white/70 max-w-2xl mt-1">
+            Encuentra guías, cursos, retos y herramientas para crecer como
+            desarrollador.
+          </p>
+        </div>
+        <div className="hidden md:flex items-center gap-2">
+          <ResultCount />
+        </div>
+      </div>
+
+      {/* Controles principales */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6">
+        {/* Búsqueda */}
+        <div className="lg:col-span-5">
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+            <Search className="h-5 w-5 text-white/50" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por título, etiqueta o descripción…"
+              className="w-full bg-transparent outline-none placeholder:text-white/40"
+              aria-label="Buscar recursos"
+            />
           </div>
         </div>
 
-        {/* Sección de Links */}
-        <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-          <div className="flex items-center mb-4">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6 mr-2 text-green-400" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
+        {/* Filtros rápidos */}
+        <div className="lg:col-span-7 grid grid-cols-2 md:grid-cols-5 gap-2">
+          <div className="relative">
+            <select
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-blue-500"
+              aria-label="Filtrar por nivel"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-            <h2 className="text-xl font-semibold">Links útiles</h2>
+              {LEVELS.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="space-y-3">
-            {recursos.links.map((link) => (
-              <a 
-                key={link.id}
-                href={link.url} 
-                className="flex items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+          <div className="relative">
+            <select
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-blue-500"
+              aria-label="Filtrar por formato"
+            >
+              {FORMATS.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="relative">
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-blue-500"
+              aria-label="Filtrar por idioma"
+            >
+              {LANGS.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-blue-500"
+              aria-label="Ordenar"
+            >
+              {["Relevancia", "A‑Z", "Z‑A", "Formato"].map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={() => setOnlyFavs((s) => !s)}
+            className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm border transition ${
+              onlyFavs
+                ? "bg-yellow-500/10 border-yellow-500/40 text-yellow-200"
+                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+            }`}
+            aria-pressed={onlyFavs}
+          >
+            <Star className="h-4 w-4" /> Favoritos
+          </button>
+        </div>
+      </div>
+
+      {/* Tags */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {TAGS.map((t) => (
+          <Tag
+            key={t}
+            label={t}
+            active={activeTags.includes(t)}
+            onClick={() => toggleTag(t)}
+          />
+        ))}
+      </div>
+
+      <div className="md:hidden mb-4">
+        <ResultCount />
+      </div>
+
+      {/* Contenido */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Documentos */}
+        <section className="bg-white/5 border border-white/10 rounded-2xl p-5">
+          <header className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-300" /> Documentos locales
+            </h2>
+            <span className="text-xs text-white/60">
+              {documents.length} ítem(s)
+            </span>
+          </header>
+
+          {documents.length === 0 ? (
+            <EmptyState label="No hay documentos que coincidan." />
+          ) : (
+            <ul className="space-y-3">
+              {documents.map((doc) => (
+                <li key={doc.id} className="group">
+                  <CardItem
+                    resource={doc}
+                    onToggleFav={() => toggleFavorite(doc.id)}
+                    fav={favorites.includes(doc.id)}
+                    isDocument
+                    onConsult={bumpConsulted}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* Recursos externos */}
+        <section className="xl:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-5">
+          <header className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Globe className="h-5 w-5 text-green-300" /> Recursos externos
+            </h2>
+            <span className="text-xs text-white/60">
+              {externals.length} ítem(s)
+            </span>
+          </header>
+
+          {externals.length === 0 ? (
+            <EmptyState label="No hay recursos que coincidan." />
+          ) : (
+            <ul className="grid sm:grid-cols-2 gap-4">
+              {externals.map((res) => (
+                <li key={res.id} className="group">
+                  <CardItem
+                    resource={res}
+                    onToggleFav={() => toggleFavorite(res.id)}
+                    fav={favorites.includes(res.id)}
+                    onConsult={bumpConsulted}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function CardItem({
+  resource,
+  fav,
+  onToggleFav,
+  isDocument = false,
+  onConsult,
+}) {
+  const Icon = ICONS[resource.format] || File;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(resource.url);
+    } catch (e) {
+      console.error("No se pudo copiar", e);
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-gray-900/60 to-gray-900/20 p-4 hover:border-white/20 transition">
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 mt-1">
+          <div className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+            <Icon className="h-5 w-5 text-white/80" />
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-semibold truncate" title={resource.title}>
+              {resource.title}
+            </h3>
+            <span className="text-[10px] rounded-full px-2 py-0.5 border border-white/10 text-white/60">
+              {resource.level} • {resource.lang}
+            </span>
+            {resource.format && (
+              <span className="text-[10px] rounded-full px-2 py-0.5 bg-white/5 border border-white/10 text-white/70">
+                {resource.format}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-white/70 mt-1 line-clamp-2">
+            {resource.description}
+          </p>
+
+          {/* Tags */}
+          <div className="mt-2 flex flex-wrap gap-2">
+            {resource.tags?.map((t) => (
+              <span
+                key={t}
+                className="text-[10px] rounded-md px-2 py-0.5 bg-white/5 border border-white/10 text-white/60"
+              >
+                #{t}
+              </span>
+            ))}
+          </div>
+
+          {/* Acciones */}
+          <div className="mt-3 flex items-center gap-2">
+            {isDocument ? (
+              <a
+                href={resource.url}
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm bg-blue-500/10 hover:bg-blue-500/20 border border-blue-400/30 text-blue-200"
+                download
+                onClick={onConsult}
+              >
+                Descargar
+              </a>
+            ) : (
+              <a
+                href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={onConsult}
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm bg-green-500/10 hover:bg-green-500/20 border border-green-400/30 text-green-200"
               >
-                {link.icono}
-                <span>{link.nombre}</span>
+                Abrir
               </a>
-            ))}
-          </div>
-        </div>
+            )}
 
-        {/* Sección Vacía */}
-        <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-          <div className="flex items-center mb-4">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6 mr-2 text-yellow-400" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
+            <button
+              onClick={handleCopy}
+              className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm bg-white/5 border border-white/10 hover:bg-white/10 text-white/80"
+              title="Copiar enlace"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h2 className="text-xl font-semibold">Próximamente</h2>
-          </div>
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-12 w-12 mb-4" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <p className="text-center">Sección en desarrollo</p>
+              <Copy className="h-4 w-4" /> Copiar
+            </button>
+
+            <FavoriteButton active={fav} onToggle={onToggleFav} />
           </div>
         </div>
+      </div>
+
+      {/* Marca de tipo */}
+      <div className="absolute -right-8 -top-8 rotate-45 bg-white/5 border border-white/10 text-white/40 text-[10px] px-10 py-1">
+        {isDocument ? "Documento" : "Recurso"}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ label }) {
+  return (
+    <div className="flex items-center justify-center p-8 rounded-xl border border-dashed border-white/10 bg-white/5 text-white/60">
+      <div className="flex items-center gap-2">
+        <Filter className="h-4 w-4" />
+        <span>{label}</span>
       </div>
     </div>
   );

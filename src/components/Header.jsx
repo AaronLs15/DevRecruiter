@@ -50,11 +50,6 @@ export default function Header({ isOpen, showSidebar }) {
   // Iniciales para avatar
   const initials = user
     ? user.name
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
     : '';
 
   const UserMenu = () => {
@@ -71,9 +66,9 @@ export default function Header({ isOpen, showSidebar }) {
     return (
       <Menu as="div" className="relative ml-3">
         <MenuButton className="flex items-center text-sm focus:outline-none">
-          <div className="h-8 w-8 flex items-center justify-center rounded-full bg-indigo-500 text-white font-medium">
+          {/*<div className="h-8 w-8 flex items-center justify-center rounded-full bg-indigo-500 text-white font-medium">
             {initials}
-          </div>
+          </div>*/}
           <div className="ml-3 text-left">
             <div className="text-base font-medium text-white">{user.name}</div>
             <div className="text-sm font-medium text-gray-400">{user.email}</div>

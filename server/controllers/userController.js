@@ -24,6 +24,19 @@ const userController = {
     });
   },
 
+  getUserDiasActivo: (req, res) => {
+    const { ID } = req.params;
+    UserModel.getUserDiasActivo(ID, (err, row) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      if (!row) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+      res.json({ data: row });
+    });
+  },
+
   createUser: (req, res) => {
     const { Name, Email, Password, Rol } = req.body;
     // Validación básica

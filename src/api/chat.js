@@ -14,6 +14,19 @@ export const getUserByID = async (ID) => {
   try {
     const response = await axios.get(`http://localhost:5000/api/Users/${ID}`); // Cambia la URL si es necesario
     return response.data; // Devuelve los datos del usuario
+    
+  } catch (error) {
+    console.error('Error al obtener los datos del usuario:', error);
+    throw error; // Lanza el error para manejarlo en el hook
+  }
+}
+
+export const getUserDiasActivo = async (ID) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/Users/dias/${ID}`); // Cambia la URL si es necesario
+    console.log(response);
+    return response.data; // Devuelve los datos del usuario
+    
   } catch (error) {
     console.error('Error al obtener los datos del usuario:', error);
     throw error; // Lanza el error para manejarlo en el hook

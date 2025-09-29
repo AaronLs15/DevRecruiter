@@ -1,14 +1,29 @@
 // server/config/db.js
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+require('dotenv').config();
+const sql = require('mssql');
 
-const dbPath = path.join(__dirname, '..', 'database', 'database.sqlite');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error conectándose a la base de datos:', err.message);
-  } else {
-    console.log('Conectado a la base de datos SQLite');
+const config = {
+  user: process.env.MSSQL_USER || 'sa',
+  password: process.env.MSSQL_PASSWORD || 'YourStrong!Passw0rd',
+  server: process.env.MSSQL_HOST || 'localhost',
+  port: parseInt(process.env.MSSQL_PORT || '1433', 10),
+  database: process.env.MSSQL_DATABASE || 'DevRecruiter',
+  options: {
+    encrypt: true,          // requerido cuando se conecta desde contenedor a contenedor con sqlcmd -C (cert)
+    trustServerCertificate: true
+  },
+  pool: {
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000
   }
-});
+};
 
-module.exports = db;
+let pool;
+async function getPool() {
+  if (pool) return pool;
+  pool = await sql.connect(config);
+  return pool;
+}
+
+module.exports = { sql, getPool };
