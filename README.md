@@ -5,7 +5,6 @@ Este proyecto integra un frontend en React (creado con Vite y TailwindCSS) y un 
 ## Requisitos Previos
 
 - [Node.js](https://nodejs.org/) (incluye npm)
-- (Opcional) [Git](https://git-scm.com/) para clonar el repositorio
 - [Ollama](https://ollama.ai) para ejecutar la IA localmente
 
 ## Estructura del Proyecto
