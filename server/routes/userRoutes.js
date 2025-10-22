@@ -8,6 +8,8 @@ router.get('/Users', userController.getAllUsers);
 
 // Ruta para obtener un usuario por ID
 router.get('/Users/:ID', userController.getUserByID);
+router.get('/Users/dias/:ID', userController.getUserDiasActivo);
+
 
 // Ruta para agregar un nuevo usuario
 router.post('/actUser', userController.createUser);

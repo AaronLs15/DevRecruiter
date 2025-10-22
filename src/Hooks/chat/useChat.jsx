@@ -5,8 +5,8 @@ import { createEntrevista, actCalificacionPrimeraFase, actCalificacionSegundaFas
 import useUserData from './useUserData';
 
 const VALID_ROLES = ['fullstack', 'backend', 'frontend'];
-const PRIMERA_LIMIT = 1;
-const SEGUNDA_LIMIT = 1;
+const PRIMERA_LIMIT = 5;
+const SEGUNDA_LIMIT = 5;
 
 export default function useInterviewChat() {
   const [input, setInput] = useState('');
@@ -108,9 +108,9 @@ export default function useInterviewChat() {
     if (calificacionPF !== null) {
       setChatHistory(prev => [
         ...prev,
-        { text: `Calificación de la primera fase: ${calificacionPF}/100`, sender: 'bot' },
+        { text: `Calificación de la primera fase guardada`, sender: 'bot' },
         { text: 'Para poder seguir con la etapa de las preguntas técnicas necesito saber lo siguiente para agregarlo a mi sistema.', sender: 'bot' },
-        { text: 'En una escala del 1 al 5, ¿qué tan experimentado o con conocimiento te sientes en el área que elegiste para hacer la entrevista? (Responde únicamente con un número del 1 al 5)', sender: 'bot' }
+        { text: 'En una escala del 1 al 5, ¿qué tan experimentado o con conocimiento te sientes en el área que elegiste para hacer la entrevista? (Responde únicamente con un número del 1 al 5, 1 siendo el menor y 5 el mayor con mas dificultad)', sender: 'bot' }
       ]);
       setExpectRating(true);
       setLoading(false);
@@ -162,7 +162,7 @@ export default function useInterviewChat() {
       setExperienciaRating(rating);
       const score = Math.round((rating / 5) * 100);
       setPreviousScore(score);
-      setChatHistory(prev => [...prev, { text: `Entendido, nivel ${rating} de experiencia (${score}/100). Comenzamos la fase técnica.`, sender: 'bot' }]);
+      setChatHistory(prev => [...prev, { text: `Entendido, nivel ${rating} de experiencia. Comenzamos la fase técnica.`, sender: 'bot' }]);
       setExpectRating(false);
       fetchNextSegundaPregunta();
       return;
@@ -175,13 +175,13 @@ export default function useInterviewChat() {
       setRespuestasSegundaF(prev => [...prev, nuevaRespuesta]);
       setLoading(true);
       try {
-        const evalPrompt = `A partir de la pregunta: "${currentSegundaPregunta}" y esta respuesta: "${trimmed}", califícala en una escala de 1 a 100.`;
+        const evalPrompt = `A partir de la pregunta: "${currentSegundaPregunta}" y esta respuesta: "${trimmed}", califícala en una escala de 1 a 100, solo retorname la calificacion y si la respuesta es "no se" o "no tengo idea" calificala con 0.`;
         const evalRaw = await sendMessageToOllama(evalPrompt);
         const match = evalRaw.match(/\d+/);
         const score = match ? parseInt(match[0], 10) : previousScore;
         setScoresSegundaF(prev => [...prev, score]);
         setPreviousScore(score);
-        setChatHistory(prev => [...prev, { text: `Calificación de tu respuesta: ${score}/100`, sender: 'bot' }]);
+        setChatHistory(prev => [...prev, { text: `Calificación de tu respuesta guardada correctamente`, sender: 'bot' }]);
 
         // Si no es la última, continuar
         const newCount = respuestasSegundaF.length + 1;
