@@ -7,7 +7,7 @@ const { sql, getPool } = require('../config/db');
 (async () => {
   try {
     const pool = await getPool();
-    const schemaPath = path.join(__dirname, '..', '..', 'db', 'sql', '001_schema.sql');
+    const schemaPath = path.join(__dirname, '..', 'db', 'sql', '001_schema.sql');
     const sqlText = fs.readFileSync(schemaPath, 'utf8');
 
     // Divide por 'GO' para ejecutar en lotes (SQL Server)

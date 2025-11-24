@@ -25,7 +25,7 @@ function issueTokens({ userId, sessionId, refreshVersion }) {
 }
 
 async function login(req, res) {
-  
+
   try {
     const { email, password } = req.body || {};
     const ip = req.ip;
@@ -45,12 +45,12 @@ async function login(req, res) {
       return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
     }
 
-    // // bcrypt comparará string vs string (evitamos "Illegal arguments" si hash es undefined)
-    // const ok = await validatePassword(password, hash);
-    // if (!ok) {
-    //   await auditAuth({ userId: user.id, event: 'login_failed', message: 'wrong_password', ip, ua });
-    //   return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
-    // }
+    // bcrypt comparará string vs string (evitamos "Illegal arguments" si hash es undefined)
+    const ok = await validatePassword(password, hash);
+    if (!ok) {
+      await auditAuth({ userId: user.id, event: 'login_failed', message: 'wrong_password', ip, ua });
+      return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
+    }
 
     const session = await createSession({ userId: user.id, userAgent: ua, ip });
     const { accessToken, refreshToken } = issueTokens({
@@ -80,12 +80,12 @@ async function refresh(req, res) {
     if (!token) return res.status(401).json({ error: 'NO_REFRESH_TOKEN' });
 
     const payload = verifyRefreshToken(token);
-    console.log('payload',payload)
+    console.log('payload', payload)
     const { sub: userId, sid: sessionId, ver } = payload || {};
     if (!userId || !sessionId) return res.status(401).json({ error: 'INVALID_REFRESH' });
 
     const [session] = await getSessionById(sessionId);
- 
+
     if (!session || session.RevokedAt) return res.status(401).json({ error: 'SESSION_INVALID' });
 
     // Validar expiración absoluta de la sesión
@@ -134,7 +134,7 @@ async function logout(req, res) {
       const payload = require('../utils/jwt.util').verifyRefreshToken(token);
       sessionId = payload.sid;
       userId = payload.sub;
-    } catch (_) {}
+    } catch (_) { }
   }
 
   if (!sessionId && req.headers.authorization?.startsWith('Bearer ')) {
@@ -143,7 +143,7 @@ async function logout(req, res) {
       const payload = require('../utils/jwt.util').verifyAccessToken(access);
       sessionId = payload.sid;
       userId = payload.sub;
-    } catch (_) {}
+    } catch (_) { }
   }
 
   if (!sessionId) return res.status(200).json({ ok: true }); // idempotente

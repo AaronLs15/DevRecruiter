@@ -1,5 +1,5 @@
 // server/utils/audit.util.js
-const { sql, getPool } = require('../db');
+const { sql, getPool } = require('../config/db');
 
 async function auditAuth({ userId, sessionId = null, event, message = null, ip, ua }) {
   try {

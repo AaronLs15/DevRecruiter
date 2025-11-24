@@ -1,6 +1,7 @@
 // server/models/userModel.js
 require("dotenv").config();
 const { getPool, sql } = require("../config/db");
+const bcrypt = require("bcryptjs");
 
 const OLLAMA_URL = process.env.OLLAMA_API_URL || "http://localhost:11434";
 const MODEL_NAME = process.env.OLLAMA_MODEL || "deepseek-r1";
@@ -68,7 +69,7 @@ const UserModel = {
       `;
 
       const result = await pool.request().input("ID", sql.Int, ID).query(query);
-      
+
 
       callback(null, result.recordset[0] || null);
     } catch (err) {
@@ -99,11 +100,12 @@ const UserModel = {
   createUser: async ({ Name, Email, Password, Rol }, callback) => {
     try {
       const pool = await getPool();
+      const hashedPassword = await bcrypt.hash(Password, 10);
       const result = await pool
         .request()
         .input("Nombre", sql.NVarChar(255), Name)
         .input("Email", sql.NVarChar(255), Email)
-        .input("Password", sql.NVarChar(255), Password)
+        .input("Password", sql.NVarChar(255), hashedPassword)
         .input("Rol", sql.NVarChar(100), Rol).query(`
           INSERT INTO dbo.usuarios (Nombre_usuario, Email, [Contraseña], Rol)
           OUTPUT INSERTED.id AS id

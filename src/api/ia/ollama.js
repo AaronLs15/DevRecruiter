@@ -1,4 +1,4 @@
-import ollama from 'ollama';
+import ollama from 'ollama/browser';
 
 /**
  * Envía un mensaje al modelo de Ollama y obtiene una respuesta.

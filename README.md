@@ -1,113 +1,93 @@
-# Proyecto Dev Recruiter
+# DevRecruiter
 
-Este proyecto integra un frontend en React (creado con Vite y TailwindCSS) y un backend basado en Node.js con Express y SQLite. La aplicación simula una interfaz de chat (similar a ChatGPT) y cuenta con una API para almacenar preguntas preestablecidas y respuestas generadas por una IA, la cual se ejecutará localmente usando Ollama.
+DevRecruiter es una plataforma para conectar desarrolladores con reclutadores, facilitando el proceso de entrevistas y evaluaciones técnicas.
 
-## Requisitos Previos
+## 🚀 Características
 
-- [Node.js](https://nodejs.org/) (incluye npm)
-- [Ollama](https://ollama.ai) para ejecutar la IA localmente
+- **Autenticación Segura**: Sistema de login con JWT (Access & Refresh Tokens) y validación de sesiones.
+- **Roles de Usuario**: Soporte para Aspirantes y Empleadores.
+- **Entrevistas AI**: Integración con Ollama para generar preguntas y evaluar respuestas.
+- **Dashboard**: Visualización de estadísticas y progreso.
 
-## Estructura del Proyecto
+## 🛠️ Tecnologías
 
-- **Frontend:** Ubicado en la raíz del proyecto, contiene la aplicación React creada con Vite.
-- **Backend:** Carpeta `server/` que incluye la API desarrollada con Express y la base de datos SQLite.
+- **Frontend**: React, Vite, TailwindCSS.
+- **Backend**: Node.js, Express.
+- **Base de Datos**: SQL Server.
+- **AI**: Ollama (DeepSeek-R1).
+- **Infraestructura**: Docker, Docker Compose.
 
-## Instalación
+## 📋 Requisitos Previos
 
-### 1. Clonar el Repositorio
+- [Docker](https://www.docker.com/) y Docker Compose.
+- [Ollama](https://ollama.com/) ejecutándose localmente (para funcionalidades de AI).
+  - Modelo recomendado: `deepseek-r1`.
+  - Asegúrate de que Ollama acepte conexiones externas o esté configurado correctamente.
 
-### 2. Instalación de Dependencias del Frontend
-Desde la raíz del proyecto, instala las dependencias del frontend:
+## 🐳 Ejecución con Docker (Recomendado)
 
+1. **Clonar el repositorio**:
+   ```bash
+   git clone <url-del-repo>
+   cd DevRecruiter
+   ```
+
+2. **Iniciar la aplicación**:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Acceder**:
+   - Frontend: [http://localhost](http://localhost)
+   - Backend: [http://localhost:3001](http://localhost:3001)
+
+## 💻 Ejecución Local (Desarrollo)
+
+### Base de Datos
+Necesitas una instancia de SQL Server. Puedes usar la imagen de Docker:
 ```bash
-npm install
-```
-Esto instalará todas las dependencias necesarias para la aplicación React (Vite, TailwindCSS, react-icons, etc.), según lo definido en el archivo package.json.
-
-### 3. Instalación de Dependencias del Backend
-Navega a la carpeta server:
-
-```bash
-cd server
-```
-Luego, instala las dependencias del backend:
-
-```bash
-npm install
-```
-
-### 4. Inicialización de la Base de Datos
-Desde la carpeta server, ejecuta el siguiente script para crear la base de datos y la tabla necesaria:
-
-```bash
-node initDB.js
-```
-
-Este comando creará el archivo db.sqlite y la tabla qa para almacenar preguntas y respuestas.
-
-### 5. Instalación de Ollama
-Para ejecutar la inteligencia artificial localmente con Ollama:
-
--Visita la página oficial de [Ollama](https://ollama.com/).
-
--Descarga el instalador correspondiente a tu sistema operativo (por ejemplo, para Windows 11).
-
--Ejecuta el instalador y sigue las instrucciones para completar la instalación.
-
--Una vez instalado, inicia Ollama y verifica que esté corriendo antes de realizar peticiones a la API.
-
-
-# Ejecución del Proyecto
-Ejecutar el Backend
-Desde la carpeta server, inicia el servidor con:
-
-```bash
-node server.js
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong!Passw0rd" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
 ```
 
-Si deseas que el servidor se reinicie automáticamente al hacer cambios, puedes usar nodemon:
+### Backend
+1. Navega a `server/`:
+   ```bash
+   cd server
+   ```
+2. Instala dependencias:
+   ```bash
+   npm install
+   ```
+3. Crea un archivo `.env` (puedes copiar el ejemplo o usar los valores por defecto).
+4. Inicia el servidor:
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm install -g nodemon   # Solo la primera vez, si no lo tienes instalado
-nodemon server.js
-```
-El backend se ejecutará en el puerto 5000 por defecto y expondrá endpoints.
+### Frontend
+1. Navega a la raíz (donde está `vite.config.js`):
+   ```bash
+   cd ..
+   ```
+2. Instala dependencias:
+   ```bash
+   npm install
+   ```
+3. Inicia el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
 
+## 🤖 Configuración de AI (Ollama)
 
-# Ejecutar el Frontend
-Abre una nueva terminal, vuelve a la raíz del proyecto y ejecuta:
-```bash
-npm run dev
-```
+El proyecto espera que Ollama esté corriendo en `http://localhost:11434`.
+Puedes configurar la URL y el modelo en las variables de entorno del backend:
+- `OLLAMA_API_URL`
+- `OLLAMA_MODEL`
 
-# Uso
-Interfaz de Chat: La aplicación React simula un chat con un input de texto y muestra el historial de mensajes.
+## 📂 Estructura del Proyecto
 
-API: El backend permite almacenar y recuperar preguntas y respuestas mediante peticiones HTTP.
-
-IA con Ollama: Con Ollama instalado y corriendo, la aplicación puede realizar peticiones a la API de Ollama para obtener respuestas generadas por la IA local.
-
-# Tecnologías Utilizadas
-## Frontend:
-- React con Vite
-- TailwindCSS
-- React Icons
-
-## Backend:
-
-- Node.js con Express
-- SQLite (usando el paquete sqlite3)
-- CORS
-
-## Inteligencia Artificial:
-
-- Ollama para ejecutar la IA localmente
-
-# Notas Adicionales
-Asegúrate de tener corriendo tanto el backend como el frontend para que la aplicación funcione correctamente.
-
-Verifica que Ollama esté activo en tu máquina antes de enviar peticiones que involucren la generación de respuestas de la IA.
-
-Puedes personalizar la API, la interfaz del chat o la integración con Ollama según tus necesidades.
-
-tet
+- `/server`: Código del Backend (Node.js + Express).
+  - `/src`: Código fuente (Controladores, Modelos, Rutas).
+- `/src`: Código del Frontend (React).
+- `docker-compose.yml`: Orquestación de contenedores.

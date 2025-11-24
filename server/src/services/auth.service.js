@@ -1,5 +1,5 @@
 // server/services/auth.service.js
-const { sql, getPool } = require('../db');
+const { sql, getPool } = require('../config/db');
 
 async function findUserByEmail(email) {
   const pool = await getPool();
