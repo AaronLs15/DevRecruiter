@@ -155,3 +155,94 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_usuarios_Email' AND object_id = OBJECT_ID('dbo.usuarios'))
   CREATE UNIQUE INDEX IX_usuarios_Email ON dbo.usuarios(Email);
 GO
+
+
+/* 3) auth_session: crear si no existe y alinear UserID BIGINT */
+IF OBJECT_ID('dbo.auth_session','U') IS NULL
+BEGIN
+  CREATE TABLE dbo.auth_session (
+    SessionID      BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_auth_session PRIMARY KEY,
+    UserID         INT NOT NULL,
+    RefreshVersion INT NOT NULL CONSTRAINT DF_auth_session_RefreshVersion DEFAULT(1),
+    UserAgent      NVARCHAR(255) NULL,
+    IpAddress      NVARCHAR(45)  NULL,
+    CreatedAt      DATETIME2(3)  NOT NULL CONSTRAINT DF_auth_session_CreatedAt DEFAULT(SYSDATETIME()),
+    LastActivity   DATETIME2(3)  NOT NULL CONSTRAINT DF_auth_session_LastActivity DEFAULT(SYSDATETIME()),
+    ExpiresAt      DATETIME2(3)  NOT NULL,
+    RevokedAt      DATETIME2(3)  NULL,
+    RevokedReason  NVARCHAR(100) NULL
+  );
+END
+ELSE
+BEGIN
+  -- Alinear tipo a BIGINT si fuera necesario
+  IF COL_LENGTH('dbo.auth_session','UserID') IS NOT NULL
+  BEGIN
+    -- soltar índice para poder alterar
+    IF EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_auth_session_UserID' AND object_id=OBJECT_ID('dbo.auth_session'))
+      DROP INDEX IX_auth_session_UserID ON dbo.auth_session;
+
+    ALTER TABLE dbo.auth_session ALTER COLUMN UserID BIGINT NOT NULL;
+  END;
+END;
+
+-- recrear índices de auth_session (si faltan)
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_auth_session_UserID' AND object_id=OBJECT_ID('dbo.auth_session'))
+  CREATE INDEX IX_auth_session_UserID ON dbo.auth_session(UserID);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_auth_session_Expires' AND object_id=OBJECT_ID('dbo.auth_session'))
+  CREATE INDEX IX_auth_session_Expires ON dbo.auth_session(ExpiresAt);
+
+
+IF OBJECT_ID('dbo.audit_auth_log','U') IS NULL
+BEGIN
+  CREATE TABLE dbo.audit_auth_log (
+    AuditID    BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_audit_auth_log PRIMARY KEY,
+    UserID     INT NOT NULL,
+    SessionID  BIGINT NULL,
+    Event      NVARCHAR(40) NOT NULL,
+    Message    NVARCHAR(200) NULL,
+    IpAddress  NVARCHAR(45)  NULL,
+    UserAgent  NVARCHAR(255) NULL,
+    CreatedAt  DATETIME2(3)  NOT NULL CONSTRAINT DF_audit_auth_log_CreatedAt DEFAULT(SYSDATETIME())
+  );
+
+  CREATE INDEX IX_audit_user_event ON dbo.audit_auth_log(UserID, Event);
+
+  IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name='CK_audit_auth_log_Event')
+    ALTER TABLE dbo.audit_auth_log
+      ADD CONSTRAINT CK_audit_auth_log_Event
+      CHECK (Event IN ('login','refresh','logout','logout_idle','logout_all','refresh_reuse_detected','login_failed'));
+END
+ELSE
+BEGIN
+  -- Alinear tipo a BIGINT si fuera necesario
+  IF COL_LENGTH('dbo.audit_auth_log','UserID') IS NOT NULL
+  BEGIN
+    IF EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_audit_user_event' AND object_id=OBJECT_ID('dbo.audit_auth_log'))
+      DROP INDEX IX_audit_user_event ON dbo.audit_auth_log;
+
+    ALTER TABLE dbo.audit_auth_log ALTER COLUMN UserID BIGINT NOT NULL;
+
+    CREATE INDEX IX_audit_user_event ON dbo.audit_auth_log(UserID, Event);
+  END;
+
+  -- Check constraint del evento (si falta)
+  IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name='CK_audit_auth_log_Event')
+    ALTER TABLE dbo.audit_auth_log
+      ADD CONSTRAINT CK_audit_auth_log_Event
+      CHECK (Event IN ('login','refresh','logout','logout_idle','logout_all','refresh_reuse_detected','login_failed'));
+END;
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_auth_session_user')
+  ALTER TABLE dbo.auth_session
+    ADD CONSTRAINT FK_auth_session_user
+      FOREIGN KEY (UserID) REFERENCES dbo.usuarios(id) ON DELETE CASCADE;
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_audit_user')
+  ALTER TABLE dbo.audit_auth_log
+    ADD CONSTRAINT FK_audit_user
+      FOREIGN KEY (UserID) REFERENCES dbo.usuarios(id) ON DELETE CASCADE;
+
+COMMIT TRAN;

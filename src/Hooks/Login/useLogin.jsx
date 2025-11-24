@@ -41,18 +41,19 @@ export function useLogin() {
     }
 
     const payload = isLogin
-      ? { Email: email, Password: password }
+      ? { email: email, password: password }
       : { Name: name, Email: email, Password: password, Rol: isEmployer ? 'Empleador' : 'Aspirante' };
 
     try {
       if (isLogin) {
         const user = await iniciarSesion({ data: payload });
-        if (user && (user.id || user.ID)) {
-          const id = user.id || user.ID;
+        if (user) {
+          console.log('usuarios',user);
+          const id = user?.user?.id;
           localStorage.setItem('userID', id);
-          localStorage.setItem('userEmail', user.Email);
-          localStorage.setItem('userName', user.Nombre_usuario);
-          localStorage.setItem('userRole', user.Rol);
+          localStorage.setItem('userEmail', user.user?.email);
+          localStorage.setItem('userName', user.user?.nombre);
+          localStorage.setItem('userRole', user.user?.rol);
           setSuccess('Sesión iniciada correctamente.');
           markAuthenticated();
           navigate('/Inicio');

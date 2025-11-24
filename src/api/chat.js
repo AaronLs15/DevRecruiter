@@ -1,199 +1,135 @@
-import axios from 'axios';
+import { api, authApi, setAccessToken } from './http';
 
+// ======= USERS =======
 export const getUsersData = async () => {
-  try {
-    const response = await axios.get('http://localhost:5000/api/Users'); // Cambia la URL si es necesario
-    return response.data; // Devuelve los datos del usuario
-  } catch (error) {
-    console.error('Error al obtener los datos del usuario:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
+  const { data } = await api.get('/Users');
+  return data;
 };
 
 export const getUserByID = async (ID) => {
-  try {
-    const response = await axios.get(`http://localhost:5000/api/Users/${ID}`); // Cambia la URL si es necesario
-    return response.data; // Devuelve los datos del usuario
-    
-  } catch (error) {
-    console.error('Error al obtener los datos del usuario:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+  const { data } = await api.get(`/Users/${ID}`);
+  return data;
+};
 
 export const getUserDiasActivo = async (ID) => {
-  try {
-    const response = await axios.get(`http://localhost:5000/api/Users/dias/${ID}`); // Cambia la URL si es necesario
-    console.log(response);
-    return response.data; // Devuelve los datos del usuario
-    
-  } catch (error) {
-    console.error('Error al obtener los datos del usuario:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+  const { data } = await api.get(`/Users/dias/${ID}`);
+  return data;
+};
 
-export const actUsuario = async ({data}) => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/actUser',data);
-    return response.data; // Devuelve los datos del usuario
-  } catch (error) {
-    console.error('Error al obtener los datos del usuario:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+export const actUsuario = async ({ data }) => {
+  const res = await api.post('/actUser', data);
+  return res.data;
+};
 
-export const actAspirante = async ({data}) => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/actAspirante',data);
-    return response.data; // Devuelve los datos del usuario
-  } catch (error) {
-    console.error('Error al obtener los datos del usuario:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+export const actAspirante = async ({ data }) => {
+  const res = await api.post('/actAspirante', data);
+  return res.data;
+};
 
-export const actEmpleador = async ({data}) => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/actEmpleador',data);
-    return response.data; // Devuelve los datos del usuario
-  } catch (error) {
-    console.error('Error al obtener los datos del usuario:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+export const actEmpleador = async ({ data }) => {
+  const res = await api.post('/actEmpleador', data);
+  return res.data;
+};
 
+// ======= AUTH =======
+// reemplaza el endpoint legacy por el nuevo /auth/login
 export const iniciarSesion = async ({ data }) => {
+  const res = await authApi.post('/auth/login', {
+    email: data.email,
+    password: data.password,
+    nombre: data.nombre,
+    rol: data.rol,
+  });
+  const payload = res?.data || {};
+  if (payload.accessToken) setAccessToken(payload.accessToken);
+  return payload; // { user, accessToken }
+};
+
+// (si alguna vez quieres forzar refresh manual)
+export const refreshToken = async () => {
   try {
-    const response = await axios.post(
-      'http://localhost:5000/api/iniciarSesion',
-      data
-    );
-    return response.data.data[0];
-  } catch (error) {
-    console.error('Error al iniciar sesión:', error);
-    throw error;
+    const res = await authApi.post('/auth/refresh'); // withCredentials: true
+    const token = res?.data?.accessToken || null;
+    if (token) setAccessToken(token);
+    return token; // devuelve el accessToken o null
+  } catch (err) {
+    // Si no hay cookie o la sesión expiró, el backend devuelve 401: úsalo como "no hay sesión".
+    if (err?.response?.status === 401) return null;
+    // Otros errores sí deben propagarse (CORS, red, 5xx)
+    throw err;
   }
 };
 
-export const getPrimeraFasePreguntas= async () => {
-  try {
-    const response = await axios.get('http://localhost:5000/api/PrimeraFasePreguntas'); // Cambia la URL si es necesario
-    return response.data; // Devuelve los datos de las preguntas
-  } catch (error) {
-    console.error('Error al obtener las preguntas:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+export const logout = async () => {
+  await authApi.post('/auth/logout'); // limpia cookie en el server
+  setAccessToken(null);
+};
+
+// ======= ENTREVISTAS / PREGUNTAS =======
+export const getPrimeraFasePreguntas = async () => {
+  const { data } = await api.get('/PrimeraFasePreguntas');
+  return data;
+};
 
 export const getSegundaFasePreguntas = async (role) => {
-  try {
-    const response = await axios.get(
-      `http://localhost:5000/api/SegundaFasePreguntas?role=${encodeURIComponent(role)}`
-    );
-    return response.data; // Devuelve los datos de las preguntas
-  } catch (error) {
-    console.error('Error al obtener las preguntas:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+  const { data } = await api.get(`/SegundaFasePreguntas`, {
+    params: { role },
+  });
+  return data;
+};
 
 export const actPrimeraFase = async () => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/actPrimeraFase');
-    return response;
-  } catch (error) {
-    console.error('Error al obtener las preguntas de la primera fase:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+  const res = await api.post('/actPrimeraFase');
+  return res;
+};
 
 export const createEntrevista = async ({ ID_Aspirante, ID_Sector, Tipo_Entrevista }) => {
-  try {
-    const payload = {
-      ID_Aspirante,
-      ID_Sector,
-      Tipo_Entrevista,
-      Fecha_Entrevista: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-      Estado: 'En Desarrollo'
-    };
-    const response = await axios.post('http://localhost:5000/api/Entrevista', payload);
-    const { ID_Entrevista } = response.data;
-    // Guardar en localStorage para uso posterior
-    localStorage.setItem('ID_Entrevista', ID_Entrevista);
-    return ID_Entrevista;
-  } catch (error) {
-    console.error('Error al crear la entrevista:', error);
-    throw error;
-  }
-}
+  const payload = {
+    ID_Aspirante,
+    ID_Sector,
+    Tipo_Entrevista,
+    Fecha_Entrevista: new Date().toISOString().split('T')[0],
+    Estado: 'En Desarrollo',
+  };
+  const res = await api.post('/Entrevista', payload);
+  const { ID_Entrevista } = res.data;
+  localStorage.setItem('ID_Entrevista', ID_Entrevista);
+  return ID_Entrevista;
+};
 
-export const actCalificacionPrimeraFase = async ({data}) => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/actCalificacionPrimeraFase', data);
-    return response.data; 
-  } catch (error) {
-    console.error('Error al actualizar la calificación de la primera fase:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+export const actCalificacionPrimeraFase = async ({ data }) => {
+  const res = await api.post('/actCalificacionPrimeraFase', data);
+  return res.data;
+};
 
-export const actCalificacionSegundaFase = async ({data}) => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/actCalificacionSegundaFase', data);
-    return response.data; 
-  } catch (error) {
-    console.error('Error al actualizar la calificación de la segunda fase:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+export const actCalificacionSegundaFase = async ({ data }) => {
+  const res = await api.post('/actCalificacionSegundaFase', data);
+  return res.data;
+};
 
-export const actFeedbackEntrevista = async ({data}) => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/actFeedbackEntrevista', data);
-    return response.data; 
-  } catch (error) {
-    console.error('Error al actualizar el feedback de la entrevista:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+export const actFeedbackEntrevista = async ({ data }) => {
+  const res = await api.post('/actFeedbackEntrevista', data);
+  return res.data;
+};
 
-export const actEntrevistaFinalizada = async ({data}) => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/actEntrevistaFinalizada', data);
-    return response.data; 
-  } catch (error) {
-    console.error('Error al actualizar la entrevista finalizada:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+export const actEntrevistaFinalizada = async ({ data }) => {
+  const res = await api.post('/actEntrevistaFinalizada', data);
+  return res.data;
+};
 
 export const getEntrevistaByUserID = async (ID) => {
-  try {
-    const response = await axios.get(`http://localhost:5000/api/Entrevista/${ID}`); // Cambia la URL si es necesario
-    return response.data; // Devuelve los datos de la entrevista
-  } catch (error) {
-    console.error('Error al obtener los datos de la entrevista:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+  const { data } = await api.get(`/Entrevista/${ID}`);
+  return data;
+};
 
 export const getProfileByID = async (ID, Rol) => {
-  try {
-    const response = await axios.get(`http://localhost:5000/api/users/${ID}/profile?Rol=${encodeURIComponent(Rol)}`);
-    return response.data; // Devuelve los datos del perfil
-  } catch (error) {
-    console.error('Error al obtener los datos del perfil:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+  const { data } = await api.get(`/users/${ID}/profile`, {
+    params: { Rol },
+  });
+  return data;
+};
 
 export const getPuntajesEntrevista = async (ID) => {
-  try {
-    const response = await axios.get(`http://localhost:5000/api/users/${ID}/interviews`);
-    return response.data; // Devuelve los datos de la entrevista
-  } catch (error) {
-    console.error('Error al obtener los datos de la entrevista:', error);
-    throw error; // Lanza el error para manejarlo en el hook
-  }
-}
+  const { data } = await api.get(`/users/${ID}/interviews`);
+  return data;
+};
